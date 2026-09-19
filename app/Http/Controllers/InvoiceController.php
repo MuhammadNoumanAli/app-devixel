@@ -82,7 +82,8 @@ class InvoiceController extends Controller
             $baseQuery->where('status', $statusTab);
         }
 
-        $invoices = $baseQuery->paginate(15)->withQueryString();
+        $perPage = in_array((int)$request->input('per_page'), [10, 15, 20, 25, 50]) ? (int)$request->input('per_page') : 10;
+        $invoices = $baseQuery->paginate($perPage)->withQueryString();
 
         // Distinct MC numbers for dropdown filter
         $mc_numbers = Carrier::select('mc_number', 'company_name')->orderBy('company_name')->get();
@@ -101,24 +102,28 @@ class InvoiceController extends Controller
 
     public function viewDispatcherPDFView(Request $request)
     {
-        if ($request->ajax()) {
-            $startDate = date('Y-m-d', strtotime($request->start_date));
-            $endDate = date('Y-m-d', strtotime($request->end_date));
-        } else {
-            $endDate = Carbon::now()->toDateString();
-            $startDate = Carbon::now()->subDay(7)->toDateString();
-        }
+        $perPage = in_array((int)$request->input('per_page'), [10, 15, 20, 25, 50]) ? (int)$request->input('per_page') : 10;
+
+        $startDate = $request->filled('start_date') ? date('Y-m-d', strtotime($request->start_date)) : null;
+        $endDate = $request->filled('end_date') ? date('Y-m-d', strtotime($request->end_date)) : null;
 
         $data_array = [];
         $dispatchers = $mc_numbers = [];
 
-        $mc_numbers = Dispatch::select('dispatches.mc_number', 'carriers.company_name')
+        $mcQuery = Dispatch::select('dispatches.mc_number', 'carriers.company_name')
             ->join('carriers', 'dispatches.mc_number', '=', 'carriers.mc_number')
-            ->whereBetween(DB::raw('DATE(dispatches.created_at)'), [$startDate, $endDate])
-            ->groupBy('dispatches.mc_number', 'carriers.company_name')
-            ->get();
+            ->groupBy('dispatches.mc_number', 'carriers.company_name');
 
-        $dispatchers = Dispatch::with('user')->where('is_cancel', 0)->latest()->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate]);
+        if ($startDate && $endDate) {
+            $mcQuery->whereBetween(DB::raw('DATE(dispatches.created_at)'), [$startDate, $endDate]);
+        }
+        $mc_numbers = $mcQuery->get();
+
+        $dispatchers = Dispatch::with('user')->where('is_cancel', 0)->latest();
+
+        if ($startDate && $endDate) {
+            $dispatchers->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate]);
+        }
 
         if (!empty($request->mc_number)) {
             $dispatchers->where('mc_number', $request->mc_number);
@@ -136,7 +141,7 @@ class InvoiceController extends Controller
             }
         }
 
-        $dispatchers = $dispatchers->get();
+        $paginatedDispatchers = $dispatchers->paginate($perPage)->withQueryString();
 
         if ($request->ajax()) {
             $mc_html = '<option value="">-- Select MC Number --</option>';
@@ -146,7 +151,7 @@ class InvoiceController extends Controller
             }
 
             $table_html = '';
-            foreach ($dispatchers as $dispatcher) {
+            foreach ($paginatedDispatchers as $dispatcher) {
                 $table_html .= '<tr>';
                 if ($dispatcher->invoice_generate == 1) {
                     $table_html .= '<td>
@@ -203,10 +208,11 @@ class InvoiceController extends Controller
             }
             $data_array['mc_html'] = $mc_html;
             $data_array['table_html'] = $table_html;
+            $data_array['pagination_html'] = view('layouts.pagination', ['paginator' => $paginatedDispatchers, 'name' => 'loads'])->render();
             return response($data_array, 200);
         } else {
             $data_array['mc_numbers'] = $mc_numbers;
-            $data_array['dispatchers'] = $dispatchers;
+            $data_array['dispatchers'] = $paginatedDispatchers;
             return view('reports.dispatcher-pdf', $data_array);
         }
     }
@@ -665,13 +671,10 @@ class InvoiceController extends Controller
 
     public function getAllCarrierNotPaid(Request $request)
     {
-        if ($request->ajax()) {
-            $startDate = date('Y-m-d', strtotime($request->start_date));
-            $endDate = date('Y-m-d', strtotime($request->end_date));
-        } else {
-            $endDate = Carbon::now()->toDateString();
-            $startDate = Carbon::now()->subDay(7)->toDateString();
-        }
+        $perPage = in_array((int)$request->input('per_page'), [10, 15, 20, 25, 50]) ? (int)$request->input('per_page') : 10;
+
+        $startDate = $request->filled('start_date') ? date('Y-m-d', strtotime($request->start_date)) : null;
+        $endDate = $request->filled('end_date') ? date('Y-m-d', strtotime($request->end_date)) : null;
 
         $data_array = [];
         $dispatchers = $mc_numbers = [];
@@ -688,7 +691,12 @@ class InvoiceController extends Controller
             $dispatchers->where('mc_number', $request->mc_number);
         }
         $dispatchers->where('invoice_status', '=', 1);
-        $dispatchers = $dispatchers->get();
+
+        if ($startDate && $endDate) {
+            $dispatchers->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate]);
+        }
+
+        $paginatedDispatchers = $dispatchers->paginate($perPage)->withQueryString();
 
         if ($request->ajax()) {
             $mc_html = '<option value="">-- Select MC Number --</option>';
@@ -698,28 +706,26 @@ class InvoiceController extends Controller
             }
 
             $table_html = '';
-            foreach ($dispatchers as $dispatcher) {
+            foreach ($paginatedDispatchers as $dispatcher) {
                 $table_html .= '<tr>';
-                $table_html .= '<td>' . $dispatcher->mc_number . '</td>';
-                $table_html .= '<td>' . $dispatcher->load_number . '</td>';
-
+                $table_html .= '<td><span class="badge bg-label-primary font-monospace">' . $dispatcher->mc_number . '</span></td>';
+                $table_html .= '<td class="fw-semibold">' . $dispatcher->owner_name . '</td>';
+                $table_html .= '<td><span class="badge bg-label-info">' . $dispatcher->load_number . '</span></td>';
                 $table_html .= '<td>' . ($dispatcher->user ? $dispatcher->user->first_name . ' ' . $dispatcher->user->last_name : 'System') . '</td>';
-                $table_html .= '<td>' . $dispatcher->pick_location . '</td>';
-                $table_html .= '<td>' . $dispatcher->delivery_location . '</td>';
-                $table_html .= '<td>' . \Carbon\Carbon::parse($dispatcher->delivery_date)->format("F d, Y") . '</td>';
-                $table_html .= '<td>' . $dispatcher->owner_name . '</td>';
-                $table_html .= '<td>$' . $dispatcher->rate . '</td>';
-
-                $table_html .= '<td><button style="text-decoration: none !important;margin-top: -4px!important;font-size: 13px!important;padding-left: 0 !important;" class="btn btn-link viewdetails" data-id="' . $dispatcher->id . '"><i class="ri-eye-fill" aria-hidden="true"></i></button></td>';
-
+                $table_html .= '<td class="small">' . $dispatcher->pick_location . ' → ' . $dispatcher->delivery_location . '</td>';
+                $table_html .= '<td>' . ($dispatcher->delivery_date ? \Carbon\Carbon::parse($dispatcher->delivery_date)->format("M d, Y") : 'N/A') . '</td>';
+                $table_html .= '<td class="fw-bold text-success">$' . number_format($dispatcher->rate) . '</td>';
+                $table_html .= '<td><span class="badge bg-label-warning">Invoice Sent</span></td>';
+                $table_html .= '<td class="text-center"><a href="' . route('dispatchers.show', $dispatcher->id) . '" class="btn btn-sm btn-icon btn-text-secondary rounded-pill" title="View Dispatch"><i class="ti ti-eye"></i></a></td>';
                 $table_html .= '</tr>';
             }
             $data_array['mc_html'] = $mc_html;
             $data_array['table_html'] = $table_html;
+            $data_array['pagination_html'] = view('layouts.pagination', ['paginator' => $paginatedDispatchers, 'name' => 'unpaid invoices'])->render();
             return response($data_array, 200);
         } else {
             $data_array['mc_numbers'] = $mc_numbers;
-            $data_array['dispatchers'] = $dispatchers;
+            $data_array['dispatchers'] = $paginatedDispatchers;
             return view('invoices.carrier_not_paid', $data_array);
         }
     }

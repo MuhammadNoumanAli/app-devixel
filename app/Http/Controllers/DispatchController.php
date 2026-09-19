@@ -25,22 +25,23 @@ class DispatchController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('dispatchers-list');
         // if (! Gate::allows('dispatchers-list')) {
         //     return redirect()->route('dispatchers.index')->with("error", "YOU HAVE NOT THE RIGHT PERMISSIONS.");
         // }
 
-        $endDate = Carbon::now()->toDateString();
-        $startDate = Carbon::now()->subDay()->toDateString();
+        $perPage = in_array((int)$request->input('per_page'), [10, 15, 20, 25, 50]) ? (int)$request->input('per_page') : 10;
 
-        $data_array = [];
-        if (Auth::user()->hasRole('Admin')) {
-            $dispatchers = Dispatch::with('user')->latest()->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])->paginate(15);
-        }else{
-            $dispatchers = Dispatch::latest()->where('user_id','=', auth()->user()->id)->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])->paginate(15);
+        $query = Dispatch::with('user')->latest();
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween(DB::raw('DATE(created_at)'), [$request->start_date, $request->end_date]);
         }
+        if (!Auth::user()->hasRole('Admin')) {
+            $query->where('user_id', '=', auth()->user()->id);
+        }
+        $dispatchers = $query->paginate($perPage)->withQueryString();
         $data_array['dispatchers'] = $dispatchers;
         return view('dispatch.index', $data_array);
     }

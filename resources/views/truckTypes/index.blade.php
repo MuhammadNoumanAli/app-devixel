@@ -17,7 +17,7 @@
   <div class="card-header border-bottom py-3">
     <h5 class="card-title mb-0">Truck Types List</h5>
   </div>
-  <div class="table-responsive">
+  <div class="table-responsive text-nowrap">
     <table class="table table-hover align-middle">
       <thead class="table-light">
         <tr>
@@ -67,8 +67,6 @@
       </tbody>
     </table>
   </div>
-  <div class="card-footer d-flex justify-content-end">
-    {{ $truckTypes->links() }}
-  </div>
+  @include('layouts.pagination', ['paginator' => $truckTypes, 'name' => 'truck types'])
 </div>
 @endsection

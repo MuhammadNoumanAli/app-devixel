@@ -11,12 +11,13 @@ class TruckTypeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         if (!auth()->user()->can('truck-types-list') && !auth()->user()->can('list-trucks') && !auth()->user()->hasRole('Admin')) {
             abort(403, 'Unauthorized action.');
         }
-        $truckTypes = TruckType::latest()->paginate(10);
+        $perPage = in_array((int)$request->input('per_page'), [10, 15, 20, 25, 50]) ? (int)$request->input('per_page') : 10;
+        $truckTypes = TruckType::latest()->paginate($perPage)->withQueryString();
         return view('truckTypes.index', [
             'truckTypes' => $truckTypes,
             'truck_types' => $truckTypes,

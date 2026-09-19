@@ -86,6 +86,7 @@
   <div class="card-header border-bottom py-3">
     <form method="GET" action="{{ route('invoices.index') }}" id="filterForm">
       <input type="hidden" name="status" id="tabStatusInput" value="{{ $statusTab }}">
+      <input type="hidden" name="per_page" value="{{ request('per_page', 10) }}">
       <div class="row g-2 align-items-center">
         <div class="col-md-3 col-sm-6">
           <label class="form-label small text-muted mb-1">Filter by Carrier (MC #)</label>
@@ -191,7 +192,7 @@
   </div>
 
   <!-- Invoices Table -->
-  <div class="table-responsive">
+  <div class="table-responsive text-nowrap">
     <table class="table table-hover align-middle mb-0">
       <thead class="table-light">
         <tr>
@@ -310,11 +311,7 @@
     </table>
   </div>
 
-  @if($invoices->hasPages())
-    <div class="card-footer border-top py-3">
-      {{ $invoices->links() }}
-    </div>
-  @endif
+  @include('layouts.pagination', ['paginator' => $invoices, 'name' => 'invoices'])
 </div>
 
 <!-- Modal 1: Record Partial Payment -->

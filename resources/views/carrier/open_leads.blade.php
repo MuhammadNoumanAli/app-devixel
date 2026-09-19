@@ -125,6 +125,7 @@
   <div class="card-body py-3">
     <form method="GET" action="{{ route('carriers.openLeads') }}" class="row g-3 align-items-end">
       <input type="hidden" name="tab" value="{{ $tab }}">
+      <input type="hidden" name="per_page" value="{{ request('per_page', 10) }}">
       <div class="col-md-4 col-sm-6">
         <label class="form-label small fw-semibold">Search MC, DOT, Carrier or Company</label>
         <div class="input-group input-group-merge">
@@ -188,7 +189,7 @@
   <div class="card-header border-bottom py-3 d-flex justify-content-between align-items-center">
     <h5 class="card-title mb-0">Active Leads ({{ $leads->total() }})</h5>
   </div>
-  <div class="table-responsive">
+  <div class="table-responsive text-nowrap">
     <table class="table table-hover align-middle" id="open-leads-table">
       <thead class="table-light">
         <tr>
@@ -219,37 +220,48 @@
             <td>{{ ($leads->currentPage() - 1) * $leads->perPage() + $key + 1 }}</td>
             <td>
               <div>
-                <span class="badge bg-label-primary font-monospace fw-bold">MC-{{ $lead->mc_number }}</span>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <span class="badge bg-label-primary font-monospace fw-semibold">MC-{{ $lead->mc_number }}</span>
+                  <span class="fw-semibold text-heading">{{ $lead->name }}</span>
+                </div>
+                <div class="d-flex align-items-center text-muted small text-nowrap gap-2">
+                  @if($lead->company_name)
+                    <span><i class="ti ti-building ti-xs me-1 text-secondary"></i>{{ $lead->company_name }}</span>
+                  @endif
+                  @if($lead->company_name && $lead->number)
+                    <span class="text-secondary">&bull;</span>
+                  @endif
+                  @if($lead->number)
+                    <span><i class="ti ti-phone ti-xs me-1 text-secondary"></i>{{ $lead->number }}</span>
+                  @endif
+                </div>
               </div>
-              <div class="fw-semibold mt-1">{{ $lead->name }}</div>
-              <small class="text-muted"><i class="ti ti-building me-1"></i>{{ $lead->company_name }}</small>
-              <div class="small text-muted"><i class="ti ti-phone me-1"></i>{{ $lead->number }}</div>
             </td>
             <td>
-              <span class="badge {{ $st['class'] }} rounded-pill px-3 py-2 lead-status-badge-{{ $lead->id }}">
-                <i class="ti {{ $st['icon'] }} me-1"></i> <span class="badge-text">{{ $st['label'] }}</span>
+              <span class="badge {{ $st['class'] }} rounded-pill px-2.5 py-1 text-nowrap lead-status-badge-{{ $lead->id }}">
+                <i class="ti {{ $st['icon'] }} ti-xs me-1"></i> <span class="badge-text">{{ $st['label'] }}</span>
               </span>
             </td>
             <td>
-              <div class="d-flex align-items-center">
+              <div class="d-flex align-items-center text-nowrap">
                 <div class="avatar avatar-xs me-2">
-                  <span class="avatar-initial rounded-circle bg-label-info font-weight-bold">
+                  <span class="avatar-initial rounded-circle bg-label-info fw-bold">
                     {{ strtoupper(substr($lead->assignedTo->first_name ?? 'D', 0, 1)) }}
                   </span>
                 </div>
                 <div>
-                  <span class="fw-semibold">{{ $lead->assignedTo->full_name ?? 'Unassigned' }}</span>
+                  <span class="fw-semibold d-block text-heading">{{ $lead->assignedTo->full_name ?? 'Unassigned' }}</span>
                 </div>
               </div>
             </td>
             <td>
-              <div class="d-flex align-items-center">
+              <div class="d-flex align-items-center text-nowrap">
                 <div class="avatar avatar-xs me-2">
-                  <span class="avatar-initial rounded-circle bg-label-secondary font-weight-bold">
+                  <span class="avatar-initial rounded-circle bg-label-secondary fw-bold">
                     {{ strtoupper(substr($lead->user->first_name ?? 'A', 0, 1)) }}
                   </span>
                 </div>
-                <span>{{ $lead->user ? $lead->user->full_name : 'System' }}</span>
+                <span class="fw-medium text-heading">{{ $lead->user ? $lead->user->full_name : 'System' }}</span>
               </div>
             </td>
             <td>
@@ -292,10 +304,7 @@
       </tbody>
     </table>
   </div>
-  <div class="card-footer d-flex justify-content-between align-items-center py-3">
-    <div class="text-muted small">Showing {{ $leads->firstItem() ?? 0 }} to {{ $leads->lastItem() ?? 0 }} of {{ $leads->total() }} leads</div>
-    <div>{{ $leads->links() }}</div>
-  </div>
+  @include('layouts.pagination', ['paginator' => $leads, 'name' => 'leads'])
 </div>
 
 <!-- Modal: Communication Trail & Document Upload (Route 3) -->

@@ -39,26 +39,24 @@
     </div>
   </div>
 
-  <div class="card-body pt-3">
-    <div class="table-responsive">
-      <table id="truckTypes_table" class="table table-hover align-middle w-100">
-        <thead class="table-light">
-          <tr>
-            <th>Sr. #</th>
-            <th>Agent Name</th>
-            <th>MC #</th>
-            <th>Truck Name</th>
-            <th>Rate</th>
-            <th>%</th>
-            <th>Receivable</th>
-            <th>Load Date</th>
-            <th>Created At</th>
-          </tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
-    </div>
+  <div class="card-body p-0">
+    <table id="truckTypes_table" class="table table-hover align-middle mb-0 w-100">
+      <thead class="table-light">
+        <tr>
+          <th>Sr. #</th>
+          <th>Agent Name</th>
+          <th>MC #</th>
+          <th>Truck Name</th>
+          <th>Rate</th>
+          <th>%</th>
+          <th>Receivable</th>
+          <th>Load Date</th>
+          <th>Created At</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
   </div>
 </div>
 @endsection

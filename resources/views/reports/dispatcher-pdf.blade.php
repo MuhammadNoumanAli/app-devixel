@@ -142,5 +142,8 @@
       </tbody>
     </table>
   </div>
+  <div id="dispatcher_pdf_pagination">
+    @include('layouts.pagination', ['paginator' => $dispatchers, 'name' => 'loads'])
+  </div>
 </div>
 @endsection

@@ -82,6 +82,7 @@
 <div class="card shadow-sm mb-4">
   <div class="card-body py-3">
     <form method="GET" action="{{ route('carriers.assigned') }}" id="assignedFilterForm" class="row g-3 align-items-end">
+      <input type="hidden" name="per_page" value="{{ request('per_page', 10) }}">
       <div class="{{ $isAdmin ? 'col-md-3' : 'col-md-4' }} col-sm-6">
         <label class="form-label small fw-semibold">Search Carrier</label>
         <div class="input-group input-group-merge">
@@ -143,7 +144,7 @@
   <div class="card-header border-bottom py-3 d-flex justify-content-between align-items-center">
     <h5 class="card-title mb-0">Assigned Carriers ({{ $carriers->total() }})</h5>
   </div>
-  <div class="table-responsive">
+  <div class="table-responsive text-nowrap">
     <table class="table table-hover align-middle">
       <thead class="table-light">
         <tr>
@@ -162,45 +163,60 @@
           <tr>
             <td>{{ ($carriers->currentPage() - 1) * $carriers->perPage() + $key + 1 }}</td>
             <td>
-              <div>
-                <span class="badge bg-label-primary font-monospace fw-bold">MC-{{ $carrier->mc_number }}</span>
+              <div class="d-flex flex-column">
+                <div>
+                  <span class="badge bg-label-primary font-monospace fw-semibold">MC-{{ $carrier->mc_number }}</span>
+                </div>
+                @if($carrier->dot)
+                  <div class="text-muted small mt-1 text-nowrap"><span class="fw-semibold text-secondary">DOT:</span> {{ $carrier->dot }}</div>
+                @endif
               </div>
-              @if($carrier->dot)
-                <small class="text-muted">DOT: {{ $carrier->dot }}</small>
-              @endif
             </td>
             <td>
-              <div class="fw-semibold">{{ $carrier->name }}</div>
-              <small class="text-muted"><i class="ti ti-building me-1"></i>{{ $carrier->company_name }}</small>
-              <div class="small text-muted"><i class="ti ti-phone me-1"></i>{{ $carrier->number }}</div>
+              <div class="d-flex flex-column">
+                <span class="fw-semibold text-heading text-nowrap mb-1">{{ $carrier->name }}</span>
+                <div class="d-flex align-items-center text-muted small text-nowrap gap-2">
+                  @if($carrier->company_name)
+                    <span><i class="ti ti-building ti-xs me-1 text-secondary"></i>{{ $carrier->company_name }}</span>
+                  @endif
+                  @if($carrier->company_name && $carrier->number)
+                    <span class="text-secondary">&bull;</span>
+                  @endif
+                  @if($carrier->number)
+                    <span><i class="ti ti-phone ti-xs me-1 text-secondary"></i>{{ $carrier->number }}</span>
+                  @endif
+                </div>
+              </div>
             </td>
             <td>
-              <div class="d-flex align-items-center">
+              <div class="d-flex align-items-center text-nowrap">
                 <div class="avatar avatar-xs me-2">
-                  <span class="avatar-initial rounded-circle bg-label-info font-weight-bold">
+                  <span class="avatar-initial rounded-circle bg-label-info fw-bold">
                     {{ strtoupper(substr($carrier->assignedTo->first_name ?? 'D', 0, 1)) }}
                   </span>
                 </div>
                 <div>
-                  <span class="fw-semibold">{{ $carrier->assignedTo->full_name ?? 'Unassigned' }}</span>
-                  <small class="d-block text-muted">{{ $carrier->assignedTo->email ?? '' }}</small>
+                  <span class="fw-semibold d-block text-heading">{{ $carrier->assignedTo->full_name ?? 'Unassigned' }}</span>
+                  <small class="text-muted">{{ $carrier->assignedTo->email ?? '' }}</small>
                 </div>
               </div>
             </td>
             <td>
-              <div class="d-flex align-items-center">
+              <div class="d-flex align-items-center text-nowrap">
                 <div class="avatar avatar-xs me-2">
-                  <span class="avatar-initial rounded-circle bg-label-secondary font-weight-bold">
+                  <span class="avatar-initial rounded-circle bg-label-secondary fw-bold">
                     {{ strtoupper(substr($carrier->user->first_name ?? 'A', 0, 1)) }}
                   </span>
                 </div>
-                <span>{{ $carrier->user ? $carrier->user->full_name : 'System' }}</span>
+                <span class="fw-medium text-heading">{{ $carrier->user ? $carrier->user->full_name : 'System' }}</span>
               </div>
             </td>
             <td>
               @if($carrier->assigned_at)
-                <div>{{ \Carbon\Carbon::parse($carrier->assigned_at)->format('M d, Y') }}</div>
-                <small class="text-muted">{{ \Carbon\Carbon::parse($carrier->assigned_at)->format('h:i A') }}</small>
+                <div class="text-nowrap">
+                  <div class="fw-medium text-heading">{{ \Carbon\Carbon::parse($carrier->assigned_at)->format('M d, Y') }}</div>
+                  <small class="text-muted">{{ \Carbon\Carbon::parse($carrier->assigned_at)->format('h:i A') }}</small>
+                </div>
               @else
                 <span class="text-muted">--</span>
               @endif
@@ -216,8 +232,8 @@
                 ];
                 $st = $statusMap[$carrier->assignment_status ?? 'pending'] ?? ['label' => ucfirst($carrier->assignment_status ?? 'Pending'), 'class' => 'bg-label-secondary', 'icon' => 'ti-help'];
               @endphp
-              <span class="badge {{ $st['class'] }} rounded-pill px-3 py-2">
-                <i class="ti {{ $st['icon'] }} me-1"></i> {{ $st['label'] }}
+              <span class="badge {{ $st['class'] }} rounded-pill px-2.5 py-1 text-nowrap">
+                <i class="ti {{ $st['icon'] }} ti-xs me-1"></i> {{ $st['label'] }}
               </span>
             </td>
             <td class="text-center">
@@ -265,10 +281,7 @@
       </tbody>
     </table>
   </div>
-  <div class="card-footer d-flex justify-content-between align-items-center py-3">
-    <div class="text-muted small">Showing {{ $carriers->firstItem() ?? 0 }} to {{ $carriers->lastItem() ?? 0 }} of {{ $carriers->total() }} assigned carriers</div>
-    <div>{{ $carriers->links() }}</div>
-  </div>
+  @include('layouts.pagination', ['paginator' => $carriers, 'name' => 'assigned carriers'])
 </div>
 @endsection
 

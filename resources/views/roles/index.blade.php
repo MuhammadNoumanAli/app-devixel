@@ -164,7 +164,7 @@
       <i class="ti ti-user-plus me-1"></i> Add User
     </a>
   </div>
-  <div class="table-responsive">
+  <div class="table-responsive text-nowrap">
     <table class="table table-hover">
       <thead class="table-light">
         <tr>
@@ -229,9 +229,7 @@
       </tbody>
     </table>
   </div>
-  <div class="card-footer d-flex justify-content-end">
-    {{ $users->links() }}
-  </div>
+  @include('layouts.pagination', ['paginator' => $users, 'name' => 'users'])
 </div>
 
 <!-- Add Role Modal -->

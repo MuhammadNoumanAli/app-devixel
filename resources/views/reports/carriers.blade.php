@@ -45,25 +45,23 @@
     </div>
   </div>
 
-  <div class="card-body pt-3">
-    <div class="table-responsive">
-      <table id="carrier_table" class="table table-hover align-middle w-100">
-        <thead class="table-light">
-          <tr>
-            <th>#</th>
-            <th>Agent Name</th>
-            <th>MC #</th>
-            <th>Name</th>
-            <th>Number</th>
-            <th>Truck Type</th>
-            <th>Assign To</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
-    </div>
+  <div class="card-body p-0">
+    <table id="carrier_table" class="table table-hover align-middle mb-0 w-100">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Agent Name</th>
+          <th>MC #</th>
+          <th>Name</th>
+          <th>Number</th>
+          <th>Truck Type</th>
+          <th>Assign To</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
   </div>
 </div>
 @endsection

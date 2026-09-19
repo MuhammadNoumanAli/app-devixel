@@ -172,6 +172,105 @@
         background: rgba(75, 70, 92, 0.15);
         border-radius: 4px;
       }
+
+      /* Clean Vuexy Table Design & Typography (1px smaller headings/labels) */
+      .table:not(.table-dark) thead:not(.table-dark) th,
+      .table-light,
+      .table-light > :not(caption) > * > *,
+      .table thead.table-light th {
+        --bs-table-bg: #f8f7fa !important;
+        background-color: #f8f7fa !important;
+        color: #5d596c !important;
+        border-bottom: 1px solid #dbdade !important;
+        border-top: none !important;
+      }
+      .table th,
+      .table thead th {
+        font-size: 0.75rem !important; /* 12px - 1px smaller than default 13px */
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        padding-top: 0.75rem !important;
+        padding-bottom: 0.75rem !important;
+        padding-left: 1.25rem !important;
+        padding-right: 1.25rem !important;
+        vertical-align: middle !important;
+        white-space: nowrap !important;
+      }
+      .table td,
+      .table tbody td {
+        font-size: 0.8125rem !important; /* 13px */
+        padding-top: 0.75rem !important;
+        padding-bottom: 0.75rem !important;
+        padding-left: 1.25rem !important;
+        padding-right: 1.25rem !important;
+        vertical-align: middle !important;
+        border-bottom: 1px solid #f1f0f2 !important;
+      }
+      .table-hover > tbody > tr:hover > * {
+        --bs-table-accent-bg: rgba(115, 103, 240, 0.025) !important;
+        background-color: rgba(115, 103, 240, 0.025) !important;
+      }
+      .form-label {
+        font-size: 0.8125rem !important; /* 13px - 1px smaller than default 14px */
+        font-weight: 500 !important;
+        color: #5d596c !important;
+        margin-bottom: 0.35rem !important;
+      }
+      .form-label.small,
+      label.small {
+        font-size: 0.75rem !important; /* 12px - 1px smaller than 13px */
+        font-weight: 600 !important;
+        letter-spacing: 0.2px !important;
+      }
+      .card-title,
+      .card-header h5,
+      h5.card-title,
+      h5.card-header {
+        font-size: 0.9375rem !important; /* 15px - 1px smaller than default 16px */
+        font-weight: 600 !important;
+        color: #5d596c !important;
+      }
+      .card-header {
+        padding: 0.85rem 1.25rem !important;
+        border-bottom: 1px solid #dbdade !important;
+        background-color: transparent !important;
+      }
+      .table .badge {
+        font-weight: 500 !important;
+        letter-spacing: 0.3px !important;
+      }
+      .form-control-sm,
+      .form-select-sm {
+        font-size: 0.8125rem !important;
+        border-radius: 0.375rem !important;
+      }
+
+      /* Sleek Compact Pagination */
+      .pagination {
+        margin-bottom: 0 !important;
+        gap: 3px;
+      }
+      .pagination .page-link {
+        border-radius: 0.375rem !important;
+        font-size: 0.8125rem !important;
+        padding: 0.35rem 0.65rem !important;
+        min-width: 32px;
+        text-align: center;
+        color: #5d596c;
+        border-color: #dbdade;
+      }
+      .pagination .page-item.active .page-link {
+        background-color: #7367f0 !important;
+        border-color: #7367f0 !important;
+        color: #fff !important;
+        box-shadow: 0 0.125rem 0.25rem rgba(115, 103, 240, 0.4);
+      }
+      .pagination .page-item.disabled .page-link {
+        color: #a5a3ae;
+        background-color: transparent;
+        border-color: #dbdade;
+      }
     </style>
   </head>
 
@@ -311,6 +410,14 @@
         } else {
           alert(message);
         }
+      };
+
+      // Global Pagination per-page switcher
+      window.changePerPage = function (val) {
+        var url = new URL(window.location.href);
+        url.searchParams.set('per_page', val);
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
       };
 
       // Automatically display Toaster for Add, Edit, Delete and Status flash messages

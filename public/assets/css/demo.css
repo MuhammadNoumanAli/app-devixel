@@ -289,3 +289,202 @@ body.swal2-toast-shown .swal2-container.swal2-top-right {
 .table-responsive::-webkit-scrollbar-thumb:hover {
   background: rgba(75, 70, 92, 0.3);
 }
+
+/* ==========================================================================
+   Vuexy Clean Table Design System & Typography Refinement
+   ========================================================================== */
+
+/* Light Table Header - Soft, Clean, Crisp */
+.table:not(.table-dark) thead:not(.table-dark) th,
+.table-light,
+.table-light > :not(caption) > * > *,
+.table thead.table-light th {
+  --bs-table-bg: #f8f7fa !important;
+  background-color: #f8f7fa !important;
+  color: #5d596c !important;
+  border-bottom: 1px solid #dbdade !important;
+  border-top: none !important;
+}
+
+/* 1px Smaller Heading on Table Headers: 0.8125rem (13px) -> 0.75rem (12px) */
+.table th,
+.table thead th {
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
+  padding-left: 1.25rem !important;
+  padding-right: 1.25rem !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+
+/* Clean Table Cells */
+.table td,
+.table tbody td {
+  font-size: 0.8125rem !important;
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
+  padding-left: 1.25rem !important;
+  padding-right: 1.25rem !important;
+  vertical-align: middle !important;
+  border-bottom: 1px solid #f1f0f2 !important;
+}
+
+/* Subtle Row Hover */
+.table-hover > tbody > tr:hover > * {
+  --bs-table-accent-bg: rgba(115, 103, 240, 0.025) !important;
+  background-color: rgba(115, 103, 240, 0.025) !important;
+}
+
+/* 1px Smaller Font Size for Form Labels: 0.875rem (14px) -> 0.8125rem (13px) */
+.form-label {
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  color: #5d596c !important;
+  margin-bottom: 0.35rem !important;
+}
+
+/* 1px Smaller Font Size for Small / Filter Labels: 0.8125rem (13px) -> 0.75rem (12px) */
+.form-label.small,
+label.small {
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.2px !important;
+}
+
+/* 1px Smaller Font Size for Card Titles & Headings: 1rem (16px) -> 0.9375rem (15px) */
+.card-title,
+.card-header h5,
+h5.card-title,
+h5.card-header {
+  font-size: 0.9375rem !important;
+  font-weight: 600 !important;
+  color: #5d596c !important;
+}
+
+/* Card Header Spacing & Border */
+.card-header {
+  padding: 0.85rem 1.25rem !important;
+  border-bottom: 1px solid #dbdade !important;
+  background-color: transparent !important;
+}
+
+/* Badge Refinements in Tables */
+.table .badge {
+  font-weight: 500 !important;
+  letter-spacing: 0.3px !important;
+}
+
+/* Input / Select in Filters */
+.form-control-sm,
+.form-select-sm {
+  font-size: 0.8125rem !important;
+  border-radius: 0.375rem !important;
+}
+
+/* Custom Uniform Pagination Buttons (Prev, Next, and Numbers) */
+.pagination {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  margin: 0 !important;
+}
+
+.pagination .page-item {
+  margin: 0 !important;
+}
+
+.pagination .page-item .page-link {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+  padding: 0 !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  border-radius: 0.375rem !important;
+  border: 1px solid transparent !important;
+  background-color: rgba(75, 70, 92, 0.08) !important;
+  color: #5d596c !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.pagination .page-item .page-link:hover {
+  background-color: rgba(115, 103, 240, 0.16) !important;
+  color: #7367f0 !important;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #7367f0 !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 4px rgba(115, 103, 240, 0.4) !important;
+}
+
+.pagination .page-item.disabled .page-link {
+  background-color: rgba(75, 70, 92, 0.04) !important;
+  color: #a8aaae !important;
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+.pagination .page-item .page-link i {
+  font-size: 1rem !important;
+  line-height: 1 !important;
+  display: inline-block !important;
+}
+
+/* DataTables length and info matching users page layout */
+div.dataTables_length {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  font-size: 0.8125rem !important;
+  color: #a8aaae !important;
+  margin: 0 !important;
+}
+
+div.dataTables_length label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.35rem !important;
+  font-size: 0.8125rem !important;
+  color: #a8aaae !important;
+  margin: 0 !important;
+}
+
+div.dataTables_length select {
+  width: 72px !important;
+  font-size: 0.8125rem !important;
+  padding: 0.25rem 0.5rem !important;
+  margin: 0 !important;
+  border-radius: 0.375rem !important;
+}
+
+div.dataTables_info {
+  font-size: 0.8125rem !important;
+  color: #a8aaae !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: inline-block !important;
+}
+
+div.dataTables_paginate {
+  margin: 0 !important;
+}
+
+div.dataTables_paginate ul.pagination {
+  margin: 0 !important;
+}
+
+
+

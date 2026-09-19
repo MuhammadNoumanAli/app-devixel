@@ -45,28 +45,26 @@
     </div>
   </div>
 
-  <div class="card-body pt-3">
-    <div class="table-responsive">
-      <table id="dispatch_table" class="table table-hover align-middle w-100">
-        <thead class="table-light">
-          <tr>
-            <th>#</th>
-            <th>Dispatcher</th>
-            <th>MC #</th>
-            <th>Pick Location</th>
-            <th>Delivery Location</th>
-            <th>Load Date</th>
-            <th>Carrier Name</th>
-            <th>Rate</th>
-            <th>Broker</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
-    </div>
+  <div class="card-body p-0">
+    <table id="dispatch_table" class="table table-hover align-middle mb-0 w-100">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Dispatcher</th>
+          <th>MC #</th>
+          <th>Pick Location</th>
+          <th>Delivery Location</th>
+          <th>Load Date</th>
+          <th>Carrier Name</th>
+          <th>Rate</th>
+          <th>Broker</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
   </div>
 </div>
 @endsection

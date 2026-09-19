@@ -32,21 +32,23 @@ class CarrierController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('carriers-list');
         // if (! Gate::allows('carriers-list')) {
         //     return redirect()->route('carriers.index')->with("error", "YOU HAVE NOT THE RIGHT PERMISSIONS.");
         // }
 
-        $endDate = Carbon::now()->toDateString();
-        $startDate = Carbon::now()->toDateString();
-        $data_array = [];
-        if (Auth::user()->hasRole('Admin')) {
-            $carriers = Carrier::with('truckType', 'user', 'assignedTo')->latest()->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])->paginate(15);
-        }else{
-            $carriers = Carrier::with('truckType', 'user', 'assignedTo')->latest()->where('user_id','=', auth()->user()->id)->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])->paginate(15);
+        $perPage = in_array((int)$request->input('per_page'), [10, 15, 20, 25, 50]) ? (int)$request->input('per_page') : 10;
+
+        $query = Carrier::with('truckType', 'user', 'assignedTo')->latest();
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween(DB::raw('DATE(created_at)'), [$request->start_date, $request->end_date]);
         }
+        if (!Auth::user()->hasRole('Admin')) {
+            $query->where('user_id', '=', auth()->user()->id);
+        }
+        $carriers = $query->paginate($perPage)->withQueryString();
         $dispatchers = User::role(['Dispatcher', 'Manager', 'Dispatch Supervisor'])->get();
 
         $data_array['carriers'] = $carriers;
@@ -1162,7 +1164,8 @@ class CarrierController extends Controller
             });
         }
 
-        $carriers = $query->latest('assigned_at')->paginate(15)->withQueryString();
+        $perPage = in_array((int)$request->input('per_page'), [10, 15, 20, 25, 50]) ? (int)$request->input('per_page') : 10;
+        $carriers = $query->latest('assigned_at')->paginate($perPage)->withQueryString();
 
         $dispatchers = User::role(['Dispatcher', 'Manager', 'Dispatch Supervisor'])->where('status', 'active')->get();
 
@@ -1248,7 +1251,8 @@ class CarrierController extends Controller
             $query->where('user_id', $request->agent_id);
         }
 
-        $leads = $query->latest('updated_at')->paginate(15)->withQueryString();
+        $perPage = in_array((int)$request->input('per_page'), [10, 15, 20, 25, 50]) ? (int)$request->input('per_page') : 10;
+        $leads = $query->latest('updated_at')->paginate($perPage)->withQueryString();
 
         $dispatchers = $isAdmin ? User::role(['Dispatcher', 'Manager', 'Dispatch Supervisor'])->where('status', 'active')->get() : collect();
         $agents = $isAdmin ? User::role('Sales Agent')->where('status', 'active')->get() : collect();

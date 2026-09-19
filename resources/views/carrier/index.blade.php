@@ -19,7 +19,7 @@
   <div class="card-header border-bottom py-3">
     <h5 class="card-title mb-0">Carriers List</h5>
   </div>
-  <div class="table-responsive">
+  <div class="table-responsive text-nowrap">
     <table class="table table-hover align-middle">
       <thead class="table-light">
         <tr>
@@ -38,20 +38,26 @@
           <tr>
             <td>{{ ($carriers->currentPage() - 1) * $carriers->perPage() + $key + 1 }}</td>
             <td>
-              <div class="d-flex align-items-center">
+              <div class="d-flex align-items-center text-nowrap">
                 <div class="avatar avatar-xs me-2">
-                  <span class="avatar-initial rounded-circle bg-label-secondary font-weight-bold">
+                  <span class="avatar-initial rounded-circle bg-label-secondary fw-bold">
                     {{ strtoupper(substr($carrier->user->first_name ?? 'A', 0, 1)) }}
                   </span>
                 </div>
-                <span>{{ $carrier->user ? $carrier->user->full_name : 'System' }}</span>
+                <span class="fw-medium text-heading">{{ $carrier->user ? $carrier->user->full_name : 'System' }}</span>
               </div>
             </td>
             <td>
-              <span class="badge bg-label-primary font-monospace">{{ $carrier->mc_number }}</span>
+              <span class="badge bg-label-primary font-monospace fw-semibold">MC-{{ $carrier->mc_number }}</span>
             </td>
-            <td class="fw-semibold">{{ $carrier->name }}</td>
-            <td>{{ $carrier->number }}</td>
+            <td class="fw-semibold text-heading">{{ $carrier->name }}</td>
+            <td class="text-nowrap">
+              @if($carrier->number)
+                <i class="ti ti-phone ti-xs me-1 text-secondary"></i>{{ $carrier->number }}
+              @else
+                <span class="text-muted">--</span>
+              @endif
+            </td>
             <td>
               <span class="badge bg-label-info">{{ $carrier->truckType->name ?? 'N/A' }}</span>
             </td>
@@ -60,6 +66,7 @@
                 <select
                   onchange="getDispatchId(this, {{ $carrier->id }})"
                   class="form-select form-select-sm"
+                  style="min-width: 170px;"
                 >
                   <option value="">-- Unassigned --</option>
                   @foreach($dispatchers as $dispatcher)
@@ -69,7 +76,7 @@
                   @endforeach
                 </select>
               @else
-                <span class="text-muted">{{ $carrier->assignedTo->full_name ?? 'N/A' }}</span>
+                <span class="text-muted text-nowrap">{{ $carrier->assignedTo->full_name ?? 'N/A' }}</span>
               @endcan
             </td>
             <td class="text-center">
@@ -129,8 +136,6 @@
       </tbody>
     </table>
   </div>
-  <div class="card-footer d-flex justify-content-end">
-    {{ $carriers->links() }}
-  </div>
+  @include('layouts.pagination', ['paginator' => $carriers, 'name' => 'carriers'])
 </div>
 @endsection

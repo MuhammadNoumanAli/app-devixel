@@ -160,11 +160,7 @@
       </tbody>
     </table>
   </div>
-  <div class="card-footer d-flex justify-content-end">
-    @if(method_exists($users, 'links'))
-      {{ $users->links() }}
-    @endif
-  </div>
+  @include('layouts.pagination', ['paginator' => $users, 'name' => 'users'])
 </div>
 @endsection
 

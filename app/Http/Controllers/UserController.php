@@ -12,10 +12,11 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('users');
-        $users = User::with('roles')->latest()->paginate(10);
+        $perPage = in_array((int)$request->input('per_page'), [10, 15, 20, 25, 50]) ? (int)$request->input('per_page') : 10;
+        $users = User::with('roles')->latest()->paginate($perPage)->withQueryString();
         $data_array['users'] = $users;
         return view('users.index', $data_array);
     }

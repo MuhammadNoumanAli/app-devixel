@@ -64,6 +64,18 @@ async function getCarrier() {
             // Initialize the DataTable with the updated data
             table = $('#carrier_table').DataTable({
                 data: response,
+                pageLength: 10,
+                lengthMenu: [10, 15, 20, 25, 50],
+                dom: '<"table-responsive text-nowrap"t><"card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2 border-top"<"d-flex align-items-center gap-2"l i><"d-flex align-items-center"p>>',
+                language: {
+                    lengthMenu: 'Show _MENU_ entries',
+                    info: '• Showing _START_ to _END_ of _TOTAL_',
+                    infoEmpty: '• Showing 0 to 0 of 0',
+                    paginate: {
+                        previous: '<i class="ti ti-chevron-left ti-xs"></i>',
+                        next: '<i class="ti ti-chevron-right ti-xs"></i>'
+                    }
+                },
                 columns: [
                     { title: "Sr. #" },
                     { title: "Agent Name" },
@@ -179,6 +191,18 @@ async function getDispatch() {
             // Initialize the DataTable with the updated data
             table = $('#dispatch_table').DataTable({
                 data: response,
+                pageLength: 10,
+                lengthMenu: [10, 15, 20, 25, 50],
+                dom: '<"table-responsive text-nowrap"t><"card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2 border-top"<"d-flex align-items-center gap-2"l i><"d-flex align-items-center"p>>',
+                language: {
+                    lengthMenu: 'Show _MENU_ entries',
+                    info: '• Showing _START_ to _END_ of _TOTAL_',
+                    infoEmpty: '• Showing 0 to 0 of 0',
+                    paginate: {
+                        previous: '<i class="ti ti-chevron-left ti-xs"></i>',
+                        next: '<i class="ti ti-chevron-right ti-xs"></i>'
+                    }
+                },
                 columns: [
                     { title: "Sr. #" },
                     { title: "Dispatcher Name" },
@@ -192,14 +216,6 @@ async function getDispatch() {
                     { title: "Status" },
                     { title: "Action" },
                 ],
-                // columnDefs: [
-                //     { targets: 0, width: '12px' }, // Serial Number column
-                //     { targets: 1, width: '12px' }, // Serial Number column
-                //     { targets: 2, width: '37px' }, // Serial Number column
-                //     { targets: 3, width: '15px' }, // Serial Number column
-                //     { targets: 4, width: '15px' }, // Serial Number column
-                //     { targets: -1, width: '8px' } // Action column (last column)
-                // ]
             });
         },
     });
@@ -287,6 +303,18 @@ async function getTruckTypes() {
             // Initialize the DataTable with the updated data
             table = $('#truckTypes_table').DataTable({
                 data: response,
+                pageLength: 10,
+                lengthMenu: [10, 15, 20, 25, 50],
+                dom: '<"table-responsive text-nowrap"t><"card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2 border-top"<"d-flex align-items-center gap-2"l i><"d-flex align-items-center"p>>',
+                language: {
+                    lengthMenu: 'Show _MENU_ entries',
+                    info: '• Showing _START_ to _END_ of _TOTAL_',
+                    infoEmpty: '• Showing 0 to 0 of 0',
+                    paginate: {
+                        previous: '<i class="ti ti-chevron-left ti-xs"></i>',
+                        next: '<i class="ti ti-chevron-right ti-xs"></i>'
+                    }
+                },
                 columns: [
                     { title: "Sr. #" },
                     { title: "Agent Name" },
@@ -391,6 +419,9 @@ async function getDispatchPDFReport() {
                 $('#select_mc_numbers').append(response.mc_html);
                 $('#pdf_table').html('');
                 $('#pdf_table').append(response.table_html);
+            }
+            if (response.pagination_html) {
+                $('#dispatcher_pdf_pagination').html(response.pagination_html);
             }
         },
     });
@@ -1050,3 +1081,10 @@ function cancelLoad(dispatchId) {
     return false;
 }
 
+// Global Pagination per-page switcher
+window.changePerPage = function (val) {
+    var url = new URL(window.location.href);
+    url.searchParams.set('per_page', val);
+    url.searchParams.set('page', '1');
+    window.location.href = url.toString();
+};

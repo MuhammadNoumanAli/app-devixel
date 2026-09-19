@@ -124,14 +124,16 @@ class RolePermissionController extends Controller
         ];
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('list-roles');
+
+        $perPage = in_array((int)$request->input('per_page'), [10, 15, 20, 25, 50]) ? (int)$request->input('per_page') : 10;
 
         $roles = Role::withCount('users')->with('permissions')->get();
         $permissions = Permission::all();
         $groupedPermissions = self::getGroupedPermissions();
-        $users = User::with('roles')->latest()->paginate(15);
+        $users = User::with('roles')->latest()->paginate($perPage)->withQueryString();
 
         return view('roles.index', compact('roles', 'permissions', 'groupedPermissions', 'users'));
     }

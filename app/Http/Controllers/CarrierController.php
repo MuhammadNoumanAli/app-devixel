@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CarrierRequest;
 use App\Http\Requests\CarrierUpdateRequest;
 use App\Models\Carrier;
+use App\Models\CarrierNote;
 use App\Models\PaymentType;
 use App\Models\Setting;
 use App\Models\State;
@@ -70,11 +71,13 @@ class CarrierController extends Controller
         $paymentTypes = PaymentType::get();
         $states = State::get();
         $salesAgnets = User::role('Sales Agent')->where('status', 'active')->get();
+        $dispatchers = User::role(['Dispatcher', 'Manager', 'Dispatch Supervisor'])->where('status', 'active')->get();
         $data_array['truckSizes'] = $truckSizes;
         $data_array['truckTypes'] = $truckTypes;
         $data_array['paymentTypes'] = $paymentTypes;
         $data_array['states'] = $states;
         $data_array['salesAgnets'] = $salesAgnets;
+        $data_array['dispatchers'] = $dispatchers;
 
         return view('carrier.add', $data_array);
     }
@@ -133,7 +136,34 @@ class CarrierController extends Controller
         $carrier->zip_code = $request->zip_code;
         $carrier->comment = $request->comment;
         $carrier->rpm = $request->rpm;
+
+        if (!empty($request->assign_to)) {
+            $carrier->assign_to = $request->assign_to;
+            $carrier->assignment_status = 'pending';
+            $carrier->assigned_at = now();
+        }
+
         if($carrier->save()){
+            if (!empty($carrier->assign_to)) {
+                $assignedUser = User::find($carrier->assign_to);
+                if ($assignedUser) {
+                    $emailData = ['email' => $assignedUser->email];
+                    try {
+                        $this->sendCarrierInfoToDispatcher($carrier, $emailData);
+                    } catch (\Throwable $e) {
+                        \Log::error('Failed to send carrier email on store: ' . $e->getMessage());
+                    }
+
+                    $dispatcherName = ($assignedUser->first_name ? ($assignedUser->first_name . ' ' . $assignedUser->last_name) : $assignedUser->name) ?? 'Dispatcher';
+                    CarrierNote::create([
+                        'carrier_id' => $carrier->id,
+                        'user_id' => Auth::id(),
+                        'status' => 'pending',
+                        'message' => 'Carrier initially assigned to ' . $dispatcherName . ' (Lead Status: Pending / New).',
+                    ]);
+                }
+            }
+
             $status = 'status';
             $msg = 'Carrier Add Successfully';
         }else{
@@ -909,13 +939,17 @@ class CarrierController extends Controller
         }
     }
 
-    public function saveImage($request, $fileName): string
+    public function saveImage($request, $fileName): ?string
     {
-        $imageName = '';
+        $imageName = null;
         if ($request->hasFile($fileName)){
             $image = $request->file($fileName);
             $imageName = "im2k".date('YmdHis').'_'.uniqid().'.'.$image->extension();
-            $image->move(public_path('admin/carrier_img'),$imageName);
+            $targetDir = public_path('carrier_img');
+            if (!file_exists($targetDir)) {
+                mkdir($targetDir, 0777, true);
+            }
+            $image->move($targetDir, $imageName);
         }
         return $imageName;
     }
@@ -926,14 +960,22 @@ class CarrierController extends Controller
             return redirect()->route('carriers.index')->with("error", "YOU HAVE NOT THE RIGHT PERMISSIONS.");
         }
 
-//        $data["email"] = "bzumultan0@gmail.com";
-//        $data["email"] = "h@in2digitals.com";
-
         $setting = Setting::find(1);
-        $data["email"] = $setting['email'];
+        $recipientEmail = $setting ? $setting->email : config('mail.from.address');
 
-        $this->sendCarrierInfoToDispatcher($carrier, $data);
-        return redirect()->back();
+        if (empty($recipientEmail)) {
+            return redirect()->back()->with('error', 'No recipient email configured in Settings.');
+        }
+
+        $data["email"] = $recipientEmail;
+
+        try {
+            $this->sendCarrierInfoToDispatcher($carrier, $data);
+            return redirect()->back()->with('status', 'Carrier details email sent successfully!');
+        } catch (\Throwable $e) {
+            \Log::error('Failed to send carrier email: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Could not send email: ' . $e->getMessage());
+        }
     }
 
     public function assignTo(Request $request, Carrier $carrier){
@@ -948,13 +990,36 @@ class CarrierController extends Controller
         }
         $carrier->assign_to = $request->dispatchId;
 
+        if (!empty($request->dispatchId)) {
+            $carrier->assignment_status = 'pending';
+            $carrier->assigned_at = now();
+            $carrier->completed_at = null;
+            $carrier->completed_by = null;
+        } else {
+            $carrier->assignment_status = null;
+            $carrier->assigned_at = null;
+        }
+
         if ($carrier->save()){
 
             if (!empty($request->dispatchId)){
                 $users = User::findOrFail($request->dispatchId);
 
                 $data["email"] = $users['email'];
-                $this->sendCarrierInfoToDispatcher($carrier, $data);
+                try {
+                    $this->sendCarrierInfoToDispatcher($carrier, $data);
+                } catch (\Throwable $e) {
+                    \Log::error('Failed to send carrier info on assign: ' . $e->getMessage());
+                }
+
+                $dispatcherName = ($users->first_name ? ($users->first_name . ' ' . $users->last_name) : $users->name) ?? 'Dispatcher';
+                CarrierNote::create([
+                    'carrier_id' => $carrier->id,
+                    'user_id' => Auth::id(),
+                    'status' => 'pending',
+                    'message' => 'Carrier assigned to ' . $dispatcherName . ' (Lead Status: Pending / New).',
+                ]);
+
                 $message = 'Dispatch assign to';
 
                 if (!empty($assignedDispatchId)){
@@ -979,50 +1044,37 @@ class CarrierController extends Controller
     }
 
     private function sendCarrierInfoToDispatcher($carrier, $data){
-        $data["title"] = $carrier->name ." Details With Attachments";
+        $data["title"] = ($carrier->name ?? 'Carrier') . " Details With Attachments";
         $data["carrier_data"] = $carrier;
-        $data["carrier_data"]['user_name'] = $carrier->user->full_name;
-        $data["carrier_data"]['truck_type'] = $carrier->truckType->name;
-        $data["carrier_data"]['truck_size'] = $carrier->truckSize->name;
-        $data["carrier_data"]['payment_type'] = $carrier->paymentType->name;
-        $data["carrier_data"]['state_name'] = $carrier->state->name;
+        $data["carrier_data"]['user_name'] = $carrier->user?->full_name ?? 'N/A';
+        $data["carrier_data"]['truck_type'] = $carrier->truckType?->name ?? 'N/A';
+        $data["carrier_data"]['truck_size'] = $carrier->truckSize?->name ?? 'N/A';
+        $data["carrier_data"]['payment_type'] = $carrier->paymentType?->name ?? 'N/A';
+        $data["carrier_data"]['state_name'] = $carrier->state?->name ?? 'N/A';
 
-        $mc_letter = $w_form = $coi = $noa = $void_cheque = $extra_document = '';
-        if($carrier->mc_letter){
-            $mc_letter = public_path('admin/carrier_img/'.$carrier->mc_letter);
-        }
-        if($carrier->w_form){
-            $w_form = public_path('admin/carrier_img/'.$carrier->w_form);
-        }
-        if($carrier->coi){
-            $coi = public_path('admin/carrier_img/'.$carrier->coi);
-        }
-        if($carrier->noa){
-            $noa = public_path('admin/carrier_img/'.$carrier->noa);
-        }
-        if($carrier->void_cheque){
-            $void_cheque = public_path('admin/carrier_img/'.$carrier->void_cheque);
-        }
-        if($carrier->extra_document){
-            $extra_document = public_path('admin/carrier_img/'.$carrier->extra_document);
-        }
-        $files = [
-            $mc_letter,
-            $w_form ,
-            $coi,
-            $noa,
-            $void_cheque,
-            $extra_document,
-        ];
+        $docFields = ['mc_letter', 'w_form', 'coi', 'noa', 'void_cheque', 'extra_document'];
+        $files = [];
 
-        $files = array_filter($files);
+        foreach ($docFields as $field) {
+            if (!empty($carrier->$field)) {
+                $path = public_path('carrier_img/' . $carrier->$field);
+                if (!file_exists($path)) {
+                    $path = public_path('admin/carrier_img/' . $carrier->$field);
+                }
+                if (file_exists($path)) {
+                    $files[] = $path;
+                }
+            }
+        }
 
-        $response = Mail::send('emails.carrierDetailsEmail', $data, function($message)use($data, $files) {
+        Mail::send('emails.carrierDetailsEmail', $data, function($message) use ($data, $files) {
             $message->to($data["email"])
                 ->subject($data["title"]);
 
-            foreach ($files as $file){
-                $message->attach($file);
+            foreach ($files as $file) {
+                if (file_exists($file)) {
+                    $message->attach($file);
+                }
             }
         });
 
@@ -1030,13 +1082,17 @@ class CarrierController extends Controller
     }
 
     private function sendCarrierTakenEmail($carrier, $data) {
-
-        $data["title"] = $carrier->name ." | This Carrier Is Taken From You";
+        $data["title"] = ($carrier->name ?? 'Carrier') . " | This Carrier Is Taken From You";
         $data["carrier_data"] = $carrier;
-        $response = Mail::send('emails.carrierTaken', $data, function($message)use($data) {
-            $message->to($data["email"])
-                ->subject($data["title"]);
-        });
+
+        try {
+            Mail::send('emails.carrierTaken', $data, function($message) use ($data) {
+                $message->to($data["email"])
+                    ->subject($data["title"]);
+            });
+        } catch (\Throwable $e) {
+            \Log::error('Failed to send carrier taken email: ' . $e->getMessage());
+        }
 
         return true;
     }
@@ -1057,5 +1113,294 @@ class CarrierController extends Controller
             $html .= '-';
         }
         return $html;
+    }
+
+    /**
+     * Route 1: List of Assigned Carriers to Dispatchers
+     */
+    public function assignedCarriers(Request $request)
+    {
+        $this->authorize('assigned-carriers-list');
+
+        $user = Auth::user();
+        $isAdmin = $user->hasRole('Admin') || $user->hasRole('Dispatch Supervisor') || $user->hasRole('Manager');
+
+        $query = Carrier::with(['truckType', 'truckSize', 'user', 'assignedTo', 'state'])
+            ->whereNotNull('assign_to');
+
+        if (!$isAdmin) {
+            $query->where('assign_to', $user->id);
+        } else {
+            if ($request->filled('dispatcher_id')) {
+                $query->where('assign_to', $request->dispatcher_id);
+            }
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('mc_number', 'like', "%{$search}%")
+                  ->orWhere('dot', 'like', "%{$search}%")
+                  ->orWhere('name', 'like', "%{$search}%")
+                  ->orWhere('company_name', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('assignment_status', $request->status);
+        }
+
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween(DB::raw('DATE(assigned_at)'), [$request->start_date, $request->end_date]);
+        }
+
+        $carriers = $query->latest('assigned_at')->paginate(15)->withQueryString();
+
+        $dispatchers = User::role(['Dispatcher', 'Manager', 'Dispatch Supervisor'])->where('status', 'active')->get();
+
+        $statsQuery = Carrier::whereNotNull('assign_to');
+        if (!$isAdmin) {
+            $statsQuery->where('assign_to', $user->id);
+        }
+
+        $stats = [
+            'total_assigned' => (clone $statsQuery)->count(),
+            'pending' => (clone $statsQuery)->where('assignment_status', 'pending')->count(),
+            'in_progress' => (clone $statsQuery)->where('assignment_status', 'in_progress')->count(),
+            'not_responding' => (clone $statsQuery)->where('assignment_status', 'not_responding')->count(),
+            'documents_required' => (clone $statsQuery)->where('assignment_status', 'documents_required')->count(),
+            'done' => (clone $statsQuery)->where('assignment_status', 'done')->count(),
+        ];
+
+        return view('carrier.assigned_carriers', compact('carriers', 'dispatchers', 'stats', 'isAdmin'));
+    }
+
+    /**
+     * Route 2: Active Open Leads Dashboard
+     */
+    public function openLeads(Request $request)
+    {
+        $this->authorize('open-leads-list');
+
+        $user = Auth::user();
+        $isAdmin = $user->hasRole('Admin') || $user->hasRole('Dispatch Supervisor') || $user->hasRole('Manager');
+        $isAgent = $user->hasRole('Sales Agent') && !$isAdmin;
+        $isDispatcher = $user->hasRole('Dispatcher') && !$isAdmin;
+
+        $baseQuery = Carrier::with(['truckType', 'truckSize', 'user', 'assignedTo', 'notes.user'])
+            ->whereNotNull('assign_to');
+
+        if ($isAgent) {
+            $baseQuery->where('user_id', $user->id);
+        } elseif ($isDispatcher) {
+            $baseQuery->where('assign_to', $user->id);
+        }
+
+        $tab = $request->get('tab', 'all_open');
+
+        // Badge counts
+        $countQuery = clone $baseQuery;
+        $counts = [
+            'all_open' => (clone $countQuery)->where(function($q) {
+                $q->whereNull('assignment_status')->orWhere('assignment_status', '!=', 'done');
+            })->count(),
+            'pending' => (clone $countQuery)->where('assignment_status', 'pending')->count(),
+            'in_progress' => (clone $countQuery)->where('assignment_status', 'in_progress')->count(),
+            'not_responding' => (clone $countQuery)->where('assignment_status', 'not_responding')->count(),
+            'documents_required' => (clone $countQuery)->where('assignment_status', 'documents_required')->count(),
+            'done' => (clone $countQuery)->where('assignment_status', 'done')->count(),
+        ];
+
+        $query = clone $baseQuery;
+
+        if ($tab === 'done') {
+            $query->where('assignment_status', 'done');
+        } elseif ($tab === 'all_open') {
+            $query->where(function($q) {
+                $q->whereNull('assignment_status')->orWhere('assignment_status', '!=', 'done');
+            });
+        } else {
+            $query->where('assignment_status', $tab);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('mc_number', 'like', "%{$search}%")
+                  ->orWhere('dot', 'like', "%{$search}%")
+                  ->orWhere('name', 'like', "%{$search}%")
+                  ->orWhere('company_name', 'like', "%{$search}%");
+            });
+        }
+
+        if ($isAdmin && $request->filled('dispatcher_id')) {
+            $query->where('assign_to', $request->dispatcher_id);
+        }
+        if ($isAdmin && $request->filled('agent_id')) {
+            $query->where('user_id', $request->agent_id);
+        }
+
+        $leads = $query->latest('updated_at')->paginate(15)->withQueryString();
+
+        $dispatchers = $isAdmin ? User::role(['Dispatcher', 'Manager', 'Dispatch Supervisor'])->where('status', 'active')->get() : collect();
+        $agents = $isAdmin ? User::role('Sales Agent')->where('status', 'active')->get() : collect();
+
+        $canChangeStatus = $user->can('open-leads-status');
+
+        return view('carrier.open_leads', compact('leads', 'counts', 'tab', 'isAdmin', 'isAgent', 'isDispatcher', 'dispatchers', 'agents', 'canChangeStatus'));
+    }
+
+    /**
+     * Route 3: Fetch Communication Trail Notes for Lead Modal
+     */
+    public function getNotes(Request $request, Carrier $carrier)
+    {
+        $this->authorize('open-leads-notes');
+
+        $user = Auth::user();
+        $isAdmin = $user->hasRole('Admin') || $user->hasRole('Dispatch Supervisor') || $user->hasRole('Manager');
+
+        if (!$isAdmin) {
+            if ($user->hasRole('Sales Agent') && $carrier->user_id != $user->id) {
+                return response()->json(['error' => 'Unauthorized lead access'], 403);
+            }
+            if ($user->hasRole('Dispatcher') && $carrier->assign_to != $user->id) {
+                return response()->json(['error' => 'Unauthorized lead access'], 403);
+            }
+        }
+
+        $carrier->load(['assignedTo', 'user', 'truckType', 'truckSize', 'paymentType', 'state']);
+        $notes = $carrier->notes()->with('user')->get()->map(function ($note) {
+            return [
+                'id' => $note->id,
+                'user_id' => $note->user_id,
+                'user_name' => $note->user?->name ?? ($note->user?->first_name . ' ' . $note->user?->last_name) ?? 'System',
+                'user_role' => $note->user?->getRoleNames()->first() ?? 'User',
+                'is_current_user' => $note->user_id == Auth::id(),
+                'status' => $note->status,
+                'message' => $note->message,
+                'attachment' => $note->attachment ? asset('carrier_notes/' . $note->attachment) : null,
+                'attachment_original_name' => $note->attachment_original_name,
+                'attachment_is_image' => $note->attachment ? in_array(strtolower(pathinfo($note->attachment, PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif', 'webp']) : false,
+                'created_at_human' => $note->created_at->diffForHumans(),
+                'created_at_formatted' => $note->created_at->format('M d, Y h:i A'),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'carrier' => [
+                'id' => $carrier->id,
+                'mc_number' => $carrier->mc_number,
+                'dot' => $carrier->dot,
+                'name' => $carrier->name,
+                'company_name' => $carrier->company_name,
+                'number' => $carrier->number,
+                'email' => $carrier->email,
+                'truck_type' => $carrier->truckType?->name ?? 'N/A',
+                'truck_size' => $carrier->truckSize?->name ?? 'N/A',
+                'assignment_status' => $carrier->assignment_status ?? 'pending',
+                'assigned_to' => $carrier->assignedTo?->name ?? ($carrier->assignedTo?->first_name . ' ' . $carrier->assignedTo?->last_name) ?? 'Unassigned',
+                'created_by' => $carrier->user?->name ?? ($carrier->user?->first_name . ' ' . $carrier->user?->last_name) ?? 'N/A',
+                'can_change_status' => $user->can('open-leads-status'),
+            ],
+            'notes' => $notes,
+        ]);
+    }
+
+    /**
+     * Route 3: Store Communication Note and Upload Document for Lead
+     */
+    public function storeNote(Request $request, Carrier $carrier)
+    {
+        $this->authorize('open-leads-notes');
+
+        $user = Auth::user();
+        $isAdmin = $user->hasRole('Admin') || $user->hasRole('Dispatch Supervisor') || $user->hasRole('Manager');
+
+        if (!$isAdmin) {
+            if ($user->hasRole('Sales Agent') && $carrier->user_id != $user->id) {
+                return response()->json(['error' => 'Unauthorized lead access'], 403);
+            }
+            if ($user->hasRole('Dispatcher') && $carrier->assign_to != $user->id) {
+                return response()->json(['error' => 'Unauthorized lead access'], 403);
+            }
+        }
+
+        $request->validate([
+            'message' => 'required|string',
+            'status' => 'nullable|string|in:pending,in_progress,not_responding,documents_required,done',
+            'attachment' => 'nullable|file|mimes:png,jpg,jpeg,webp,pdf,doc,docx,xls,xlsx,zip|max:10240',
+        ]);
+
+        $statusChanged = false;
+        $newStatus = $carrier->assignment_status ?? 'pending';
+
+        // Role verification: Sales Agent CANNOT change lead status
+        if ($request->filled('status') && $request->status !== $carrier->assignment_status) {
+            if (!$user->can('open-leads-status')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to change the lead status. Only dispatchers and supervisors can update the status.'
+                ], 403);
+            }
+
+            $newStatus = $request->status;
+            $carrier->assignment_status = $newStatus;
+            $statusChanged = true;
+
+            if ($newStatus === 'done') {
+                $carrier->completed_at = now();
+                $carrier->completed_by = $user->id;
+            } else {
+                $carrier->completed_at = null;
+                $carrier->completed_by = null;
+            }
+            $carrier->save();
+        }
+
+        $attachmentFilename = null;
+        $originalFilename = null;
+
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $originalFilename = $file->getClientOriginalName();
+            $attachmentFilename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $destinationPath = public_path('carrier_notes');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+            $file->move($destinationPath, $attachmentFilename);
+        }
+
+        $note = CarrierNote::create([
+            'carrier_id' => $carrier->id,
+            'user_id' => $user->id,
+            'status' => $newStatus,
+            'message' => $request->message,
+            'attachment' => $attachmentFilename,
+            'attachment_original_name' => $originalFilename,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Note and documents posted successfully!',
+            'note' => [
+                'id' => $note->id,
+                'user_name' => $user->name ?? ($user->first_name . ' ' . $user->last_name),
+                'user_role' => $user->getRoleNames()->first() ?? 'User',
+                'is_current_user' => true,
+                'status' => $note->status,
+                'message' => $note->message,
+                'attachment' => $note->attachment ? asset('carrier_notes/' . $note->attachment) : null,
+                'attachment_original_name' => $note->attachment_original_name,
+                'attachment_is_image' => $note->attachment ? in_array(strtolower(pathinfo($note->attachment, PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif', 'webp']) : false,
+                'created_at_human' => $note->created_at->diffForHumans(),
+                'created_at_formatted' => $note->created_at->format('M d, Y h:i A'),
+            ],
+            'assignment_status' => $carrier->assignment_status,
+            'status_changed' => $statusChanged,
+            'is_done' => ($carrier->assignment_status === 'done'),
+        ]);
     }
 }

@@ -46,6 +46,7 @@ class DispatchRequest extends FormRequest
             'broker_rep_name' => ['required', 'string'],
             'bol_pod' => 'nullable|mimes:png,jpg,jpeg,doc,docx,pdf',
             'additional_doc' => 'nullable|mimes:png,jpg,jpeg,doc,docx,pdf',
+            'supervisor_id' => ['nullable', 'exists:users,id'],
         ];
 
         $user = Auth::user();

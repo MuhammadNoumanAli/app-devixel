@@ -118,7 +118,8 @@
 
               @if (isset($errors) && $errors->any())
                 <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
-                  <ul class="mb-0">
+                  <div class="fw-semibold mb-1"><i class="ti ti-alert-triangle me-1"></i> Please correct the following errors:</div>
+                  <ul class="mb-0 ps-3">
                     @foreach ($errors->all() as $error)
                       <li>{{ $error }}</li>
                     @endforeach
@@ -211,5 +212,6 @@
 
     @stack('vendor-script')
     @stack('page-script')
+    @stack('scripts')
   </body>
 </html>

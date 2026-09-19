@@ -35,7 +35,7 @@
       <tbody>
         @forelse($users as $key => $user)
           <tr>
-            <td>{{ ($users->currentPage() - 1) * $users->perPage() + $key + 1 }}</td>
+            <td>{{ method_exists($users, 'currentPage') ? ($users->currentPage() - 1) * $users->perPage() + $key + 1 : $key + 1 }}</td>
             <td>
               <div class="d-flex align-items-center">
                 <div class="avatar avatar-sm me-2">
@@ -101,18 +101,24 @@
                 </a>
 
                 @can('delete-users')
-                  <a
-                    href="javascript:void(0);"
-                    onclick="return confirmAndSubmit({{ $user->id }})"
-                    class="btn btn-sm btn-icon btn-text-danger rounded-pill"
-                    title="Delete User"
-                  >
-                    <i class="ti ti-trash"></i>
-                  </a>
-                  <form id="delete-record-{{ $user->id }}" action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-none">
-                    @csrf
-                    @method('DELETE')
-                  </form>
+                  @if($user->id != 1)
+                    <a
+                      href="javascript:void(0);"
+                      onclick="return confirmAndSubmit({{ $user->id }})"
+                      class="btn btn-sm btn-icon btn-text-danger rounded-pill"
+                      title="Delete User"
+                    >
+                      <i class="ti ti-trash"></i>
+                    </a>
+                    <form id="delete-record-{{ $user->id }}" action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-none">
+                      @csrf
+                      @method('DELETE')
+                    </form>
+                  @else
+                    <span class="btn btn-sm btn-icon text-muted rounded-pill opacity-50" title="Super Admin cannot be deleted" style="cursor: not-allowed;">
+                      <i class="ti ti-lock"></i>
+                    </span>
+                  @endif
                 @endcan
               </div>
             </td>
@@ -126,7 +132,9 @@
     </table>
   </div>
   <div class="card-footer d-flex justify-content-end">
-    {{ $users->links() }}
+    @if(method_exists($users, 'links'))
+      {{ $users->links() }}
+    @endif
   </div>
 </div>
 @endsection

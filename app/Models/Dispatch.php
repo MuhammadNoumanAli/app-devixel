@@ -51,4 +51,9 @@ class Dispatch extends Model
     {
         return $this->belongsTo(Carrier::class, 'mc_number', 'mc_number');
     }
+
+    public function invoiceDispatches()
+    {
+        return $this->hasMany(InvoiceDispatch::class);
+    }
 }

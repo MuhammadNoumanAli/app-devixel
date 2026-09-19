@@ -133,7 +133,7 @@
         <th class="w-5">Destination</th>
         <th class="w-5">PU Date</th>
         <th class="w-5">DL Date</th>
-        <th class="w-5">Price</th>
+        <th class="w-5">Gross Rate</th>
     </tr>
     @php
         $gross_rate = $receivable = 0;
@@ -178,11 +178,25 @@
         <td style="border: none;background-color: #fff;border-color: #fff;outline:#fff"></td>
         <td style="border: none;background-color: #fff;border-color: #fff;outline:#fff"></td>
         <td style="border: none;background-color: #fff;border-color: #fff;outline:#fff"></td>
-        <td colspan="2">Total Receivable {{ $dispatcher->percentage }} {{ $dispatcher->percentage !== null ? '%' : '' }}</td>
+        <td colspan="2">Total Payable Fee {{ $dispatcher->percentage ? '(' . $dispatcher->percentage . '%)' : '' }}</td>
         <td style="font-weight: bold;">${{ number_format($receivable, 2) }}</td>
-{{--        <td style="font-weight: bold;">${{ number_format(($dispatcher->percentage / 100) * $gross_rate, 2) }}</td>--}}
     </tr>
-
+    @if(isset($invoice))
+    <tr align="center" style="border: none; text-align: left !important;">
+        <td style="border: none;background-color: #fff;border-color: #fff;outline:#fff"></td>
+        <td style="border: none;background-color: #fff;border-color: #fff;outline:#fff"></td>
+        <td style="border: none;background-color: #fff;border-color: #fff;outline:#fff"></td>
+        <td colspan="2">Paid to Date</td>
+        <td style="font-weight: bold; color: #166534;">${{ number_format($invoice->paid_amount, 2) }}</td>
+    </tr>
+    <tr align="center" style="border: none; text-align: left !important;">
+        <td style="border: none;background-color: #fff;border-color: #fff;outline:#fff"></td>
+        <td style="border: none;background-color: #fff;border-color: #fff;outline:#fff"></td>
+        <td style="border: none;background-color: #fff;border-color: #fff;outline:#fff"></td>
+        <td colspan="2">Remaining Due ({{ strtoupper($invoice->status) }})</td>
+        <td style="font-weight: bold; color: {{ $invoice->due_amount > 0 ? '#991b1b' : '#166534' }};">${{ number_format($invoice->due_amount, 2) }}</td>
+    </tr>
+    @endif
 </table>
 <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 10px; text-align: left;">
     <p class="m-0 pt-5 text-bold w-100" style="margin-top: 40px; margin-bottom: 20px;">Payment Method: <span style="font-weight: normal;">(703) 656-5014 (Perfect Fright Solution)</span></p>

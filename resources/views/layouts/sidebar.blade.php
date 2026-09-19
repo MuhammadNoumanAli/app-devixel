@@ -86,18 +86,20 @@
     @endcan
 
     <!-- Carriers -->
-    @can('carriers-list')
-    <li class="menu-item {{ Request::is('carriers*') ? 'active open' : '' }}">
+    @if(auth()->user()->can('carriers-list') || auth()->user()->can('assigned-carriers-list') || auth()->user()->can('open-leads-list'))
+    <li class="menu-item {{ (Request::is('carriers*') || Request::is('assigned-carriers*') || Request::is('open-leads*')) ? 'active open' : '' }}">
       <a href="javascript:void(0);" class="menu-link menu-toggle">
         <i class="menu-icon tf-icons ti ti-truck-delivery"></i>
         <div>Carriers</div>
       </a>
       <ul class="menu-sub">
+        @can('carriers-list')
         <li class="menu-item {{ Request::is('carriers') ? 'active' : '' }}">
           <a href="{{ route('carriers.index') }}" class="menu-link">
             <div>Carriers List</div>
           </a>
         </li>
+        @endcan
         @can('carriers-create')
         <li class="menu-item {{ Request::is('carriers/create') ? 'active' : '' }}">
           <a href="{{ route('carriers.create') }}" class="menu-link">
@@ -105,9 +107,26 @@
           </a>
         </li>
         @endcan
+        @can('assigned-carriers-list')
+        <li class="menu-item {{ Request::is('assigned-carriers*') ? 'active' : '' }}">
+          <a href="{{ route('carriers.assigned') }}" class="menu-link">
+            <div>Assigned Carriers</div>
+          </a>
+        </li>
+        @endcan
+        @can('open-leads-list')
+        <li class="menu-item {{ Request::is('open-leads*') ? 'active' : '' }}">
+          <a href="{{ route('carriers.openLeads') }}" class="menu-link">
+            <div class="d-flex w-100 justify-content-between align-items-center">
+              <span>Open Leads</span>
+              <span class="badge rounded-pill bg-danger badge-dot ms-1"></span>
+            </div>
+          </a>
+        </li>
+        @endcan
       </ul>
     </li>
-    @endcan
+    @endif
 
     <!-- Dispatchers / Loads -->
     @can('dispatchers-list')
@@ -140,6 +159,11 @@
         <div>Invoices</div>
       </a>
       <ul class="menu-sub">
+        <li class="menu-item {{ Request::is('invoices') || (Request::is('invoices/*') && !Request::is('invoices/invoices-not-paid*') && !Request::is('invoices/dispatcher-report*')) ? 'active' : '' }}">
+          <a href="{{ route('invoices.index') }}" class="menu-link">
+            <div>All Invoices</div>
+          </a>
+        </li>
         <li class="menu-item {{ Request::is('invoices/invoices-not-paid*') ? 'active' : '' }}">
           <a href="{{ route('invoices.getAllCarrierNotPaid') }}" class="menu-link">
             <div>Unpaid Invoices</div>

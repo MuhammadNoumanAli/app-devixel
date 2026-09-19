@@ -6,6 +6,7 @@ use App\Http\Requests\DispatchRequest;
 use App\Models\Carrier;
 use App\Models\CommissionUser;
 use App\Models\Dispatch;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Auth;
@@ -49,12 +50,10 @@ class DispatchController extends Controller
      */
     public function create()
     {
-        // if (! Gate::allows('dispatchers-create')) {
-        //     return redirect()->route('dispatchers.index')->with("error", "YOU HAVE NOT THE RIGHT PERMISSIONS.");
-        // }
         $this->authorize('dispatchers-create');
+        $supervisors = User::role('Dispatch Supervisor')->where('status', 'active')->get();
 
-        return view('dispatch.add');
+        return view('dispatch.add', compact('supervisors'));
     }
 
     /**
@@ -71,7 +70,13 @@ class DispatchController extends Controller
         $data['rate_confirmation']      =  $this->saveImage($request, 'rate_confirmation');
         $data['bol_pod']                =  $this->saveImage($request, 'bol_pod');
         $data['additional_doc']           =  $this->saveImage($request, 'additional_doc');
-        $data['user_id'] = Auth::user()->id;
+
+        if ($request->filled('supervisor_id')) {
+            $data['user_id'] = $request->supervisor_id;
+        } else {
+            $data['user_id'] = Auth::user()->id;
+        }
+        unset($data['supervisor_id']);
 
         $user = Auth::user();
         $today = date('Y-m-d');

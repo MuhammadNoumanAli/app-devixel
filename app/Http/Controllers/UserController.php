@@ -15,8 +15,8 @@ class UserController extends Controller
     public function index()
     {
         $this->authorize('users');
-        $users = User::get();
-        $data_array['users']        = $users;
+        $users = User::with('roles')->latest()->paginate(10);
+        $data_array['users'] = $users;
         return view('users.index', $data_array);
     }
 
@@ -112,6 +112,11 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         $this->authorize('delete-users');
+
+        if ($user->id == 1) {
+            return redirect()->route('users.index')->with('error', 'Super Admin (User #1) cannot be deleted.');
+        }
+
         if($user->delete()){
             return redirect()->route('users.index')->with('status', 'User Deleted Successfully!');
         }else{

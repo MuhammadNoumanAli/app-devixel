@@ -8,16 +8,17 @@ use Illuminate\Http\Request;
 
 class TruckTypeController extends Controller
 {
-
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
         $this->authorize('list-trucks');
-        $data = [];
-        $data['truck_types'] = TruckType::latest()->paginate(10);
-        return view('truckTypes.index', $data);
+        $truckTypes = TruckType::latest()->paginate(10);
+        return view('truckTypes.index', [
+            'truckTypes' => $truckTypes,
+            'truck_types' => $truckTypes,
+        ]);
     }
 
     /**
@@ -39,7 +40,7 @@ class TruckTypeController extends Controller
         $truck_type->name = $request->name;
         $truck_type->commission = $request->commission;
         if ($truck_type->save()){
-            return redirect()->route('truck-types.index')->with('status', 'Truck Add Successfully');
+            return redirect()->route('truck-types.index')->with('status', 'Truck Added Successfully');
         }
         return redirect()->route('truck-types.index')->with('error', 'Something Went Wrong');
     }
@@ -58,13 +59,11 @@ class TruckTypeController extends Controller
     public function edit(Request $request, TruckType $truckType)
     {
         $this->authorize('edit-truck');
-        $json = [];
         if ($request->ajax()){
             $html ='<form id="updateTruckTypeForm" method="POST" data-truck-id="'.$truckType->id.'" action="'.route('truck-types.update', $truckType->id).'" class="row g-3" enctype="multipart/form-data">
                 <div class="row show-errors" style="display:none;">
                     <div class="alert alert-danger alert-dismissible fade show mt-5" role="alert">
                         <ul class="alert-danger-li">
-
                         </ul>
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
@@ -72,23 +71,21 @@ class TruckTypeController extends Controller
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label for="name" class="form-label">Name</label>
-                        <input id="name" type="text" class="form-control " name="name" value="'.$truckType->name.'" required="" autocomplete="name" >
+                        <input id="name" type="text" class="form-control" name="name" value="'.e($truckType->name).'" required autocomplete="name">
                     </div>
                     <div class="col-md-6">
-                        <label for="commission" class="form-label">Commission</label>
-                        <input id="commission" type="text" class="form-control " name="commission" value="'.$truckType->commission.'">
+                        <label for="commission" class="form-label">Commission (%)</label>
+                        <input id="commission" type="number" step="0.01" class="form-control" name="commission" value="'.e($truckType->commission).'">
                     </div>
                 </div>
-
-
                 <div class="text-center">
                     <button type="submit" class="btn btn-primary">Update</button>
                 </div>
             </form>';
 
-            $json['html'] = $html;
+            return response(['html' => $html], 200);
         }
-        return response($json, 200);
+        return view('truckTypes.edit', compact('truckType'));
     }
 
     /**
@@ -97,19 +94,31 @@ class TruckTypeController extends Controller
     public function update(Request $request, TruckType $truckType)
     {
         $this->authorize('edit-truck');
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'commission' => 'nullable|numeric|between:0,100',
+        ]);
+
         $truckType->name = $request->name;
         $truckType->commission = $request->commission;
 
-        $array_msg = [];
-        $array_msg['message'] = 'Something Went Wrong';
-        $array_msg['status'] = 'error';
         if ($truckType->save()){
-            $array_msg['status'] = 'success';
-            $array_msg['message'] = 'Truck Update Successfully';
-
-            return response($array_msg, 200);
+            if ($request->ajax()) {
+                return response([
+                    'status' => 'success',
+                    'message' => 'Truck Type Updated Successfully',
+                ], 200);
+            }
+            return redirect()->route('truck-types.index')->with('status', 'Truck Type Updated Successfully');
         }
-        return response($array_msg, 200);
+
+        if ($request->ajax()) {
+            return response([
+                'status' => 'error',
+                'message' => 'Something Went Wrong',
+            ], 200);
+        }
+        return redirect()->back()->with('error', 'Something Went Wrong');
     }
 
     /**

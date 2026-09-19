@@ -13,30 +13,6 @@
   </a>
 </div>
 
-@if (session('status'))
-  <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
-    <i class="ti ti-check me-2"></i> {{ session('status') }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  </div>
-@elseif (session('error'))
-  <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
-    <i class="ti ti-alert-circle me-2"></i> {{ session('error') }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  </div>
-@endif
-
-@if ($errors->any())
-  <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
-    <div class="fw-semibold mb-1"><i class="ti ti-alert-triangle me-1"></i> Please correct the following errors:</div>
-    <ul class="mb-0 ps-3">
-      @foreach ($errors->all() as $error)
-        <li>{{ $error }}</li>
-      @endforeach
-    </ul>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  </div>
-@endif
-
 <form method="POST" action="{{ route('carriers.update', $carrier->id) }}" enctype="multipart/form-data">
   @csrf
   @method('PATCH')
@@ -489,6 +465,27 @@ document.addEventListener('DOMContentLoaded', function() {
         cb.checked = allZonesCheckbox.checked;
       });
     });
+  }
+
+  // Auto-format contact number as (XXX) XXX-XXXX
+  const numberInput = document.getElementById('number');
+  if (numberInput) {
+    const formatPhone = function(val) {
+      const digits = val.replace(/\D/g, '').substring(0, 10);
+      const match = digits.match(/^(\d{0,3})(\d{0,3})(\d{0,4})$/);
+      if (!match) return '';
+      if (!match[2]) return match[1];
+      if (!match[3]) return '(' + match[1] + ') ' + match[2];
+      return '(' + match[1] + ') ' + match[2] + '-' + match[3];
+    };
+
+    numberInput.addEventListener('input', function(e) {
+      e.target.value = formatPhone(e.target.value);
+    });
+
+    if (numberInput.value) {
+      numberInput.value = formatPhone(numberInput.value);
+    }
   }
 });
 </script>

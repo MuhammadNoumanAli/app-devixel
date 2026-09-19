@@ -40,6 +40,10 @@ class Carrier extends Model
         'comment',
         'notification_status',
         'active_status',
+        'assignment_status',
+        'assigned_at',
+        'completed_at',
+        'completed_by',
     ];
 
     public function user()
@@ -75,5 +79,15 @@ class Carrier extends Model
     public function dispatches()
     {
         return $this->hasMany(Dispatch::class, 'mc_number', 'mc_number');
+    }
+
+    public function notes()
+    {
+        return $this->hasMany(CarrierNote::class)->orderBy('created_at', 'asc');
+    }
+
+    public function completedBy()
+    {
+        return $this->belongsTo(User::class, 'completed_by');
     }
 }

@@ -402,6 +402,7 @@ async function getDispatchPDFReport() {
     var start_date = $('#start_date1').val();
     var end_date = $('#end_date1').val();
     var mc_number = $('#select_mc_numbers').val();
+    var invoice_status = $('#select_invoice_status').val() || '';
     $('#selected_invoices').val('');
     $("#invoice_all").prop("checked", false);
 
@@ -409,7 +410,7 @@ async function getDispatchPDFReport() {
     await $.ajax({
         type: "get",
         url: '/invoices/dispatcher-report',
-        data: { 'start_date': start_date, 'end_date': end_date, 'mc_number': mc_number },
+        data: { 'start_date': start_date, 'end_date': end_date, 'mc_number': mc_number, 'invoice_status': invoice_status },
         success: function (response) {
             if (response.mc_html !== '') {
                 $('#select_mc_numbers').html('');
@@ -472,11 +473,17 @@ $('#select_mc_numbers').on('change', function () {
     }
 });
 
+$('#select_invoice_status').on('change', function () {
+    getDispatchPDFReport();
+    updatePDFUrl();
+});
+
 
 function updatePDFUrl() {
-    var mc_number = $('#select_mc_numbers').val();
-    var start_date = $('#start_date1').val();
-    var end_date = $('#end_date1').val();
+    var mc_number = $('#select_mc_numbers').val() || '';
+    var start_date = $('#start_date1').val() || '';
+    var end_date = $('#end_date1').val() || '';
+    var invoice_status = $('#select_invoice_status').val() || '';
 
     // Get the comma-separated selected invoice IDs
     var selectedInvoices = $('#selected_invoices').val();
@@ -484,9 +491,17 @@ function updatePDFUrl() {
     // Build the URL with parameters
     var url = window.location.href.split('?')[0]; // Get the base URL
     url += '?mc_number=' + mc_number + '&start_date=' + start_date + '&end_date=' + end_date;
+    if (invoice_status !== '') {
+        url += '&invoice_status=' + invoice_status;
+    }
 
     if (selectedInvoices) {
         url += '&selected_invoices=' + selectedInvoices;
+        $(".download_pdf").show();
+    } else if (mc_number !== '') {
+        $(".download_pdf").show();
+    } else {
+        $(".download_pdf").hide();
     }
 
     var url_pdf = url.replace('dispatcher-report', 'download-pdf');
@@ -496,6 +511,29 @@ function updatePDFUrl() {
     $('#pdf_dispatch_url').attr("href", url_pdf);
     $('#xlx_dispatch_url').attr("href", url_xlx);
 }
+
+$(document).on('click', '#pdf_dispatch_url', function (e) {
+    var selected = $('#selected_invoices').val();
+    if (!selected) {
+        // If checkboxes were checked without triggering updateSelectedInvoices, grab them now
+        var checked = $('td input[name="invoice"]:checked').map(function () {
+            return $(this).val();
+        }).get().join(',');
+        if (checked) {
+            $('#selected_invoices').val(checked);
+            updatePDFUrl();
+            return true;
+        }
+        e.preventDefault();
+        Swal.fire({
+            icon: 'warning',
+            title: 'No Loads Selected',
+            text: 'Please check at least one load checkbox to download invoice PDF.',
+            customClass: { confirmButton: 'btn btn-primary' }
+        });
+        return false;
+    }
+});
 // Dispatcher Pdf Report //
 
 
@@ -813,17 +851,17 @@ $(document).ready(function () {
 $(document).ready(function () {
     // Define the function to update selected invoices
     function updateSelectedInvoices() {
-        var selectedInvoices = $('td input[name="invoice"]:checked').map(function () {
+        var selectedInvoices = $('td input[name="invoice"]:checked:not(:disabled)').map(function () {
             return $(this).val();
         }).get().join(',');
 
         $('#selected_invoices').val(selectedInvoices);
 
-        // Update Select All Checkbox state
-        var allCheckboxes = $('td input[name="invoice"]');
-        var checkedCheckboxes = $('td input[name="invoice"]:checked');
+        // Update Select All Checkbox state considering only selectable (not disabled) checkboxes
+        var allCheckboxes = $('td input[name="invoice"]:not(:disabled)');
+        var checkedCheckboxes = $('td input[name="invoice"]:checked:not(:disabled)');
 
-        if (checkedCheckboxes.length === allCheckboxes.length) {
+        if (allCheckboxes.length > 0 && checkedCheckboxes.length === allCheckboxes.length) {
             $('#invoice_all').prop('checked', true);
         } else {
             $('#invoice_all').prop('checked', false);
@@ -837,15 +875,15 @@ $(document).ready(function () {
         updatePDFUrl();
     }
 
-    // Attach event handler to Select All Checkbox
+    // Attach event handler to Select All Checkbox (only toggle selectable ones)
     $(document).on('click', '#invoice_all', function () {
         var isChecked = $(this).prop('checked');
-        $('td input[name="invoice"]').prop('checked', isChecked);
+        $('td input[name="invoice"]:not(:disabled)').prop('checked', isChecked);
         updateSelectedInvoices();
     });
 
     // Attach event handler to Individual Checkboxes
-    $(document).on('click', 'td input[name="invoice"]', function () {
+    $(document).on('click', 'td input[name="invoice"]:not(:disabled)', function () {
         updateSelectedInvoices();
     });
 });
@@ -916,7 +954,10 @@ function changeInvoiceStatus(data, dispatchId) {
                     icon: 'success',
                     title: 'Success',
                     text: response.message,
-                })
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                getDispatchPDFReport();
             } else {
                 Swal.fire({
                     icon: 'error',
@@ -966,9 +1007,12 @@ function confirmAndSubmit(id) {
     return false; // Prevent the button from doing a regular submit
 }
 
-document.getElementById("load_date").onkeydown = function (e) {
-    e.preventDefault();
-};
+var loadDateElem = document.getElementById("load_date");
+if (loadDateElem) {
+    loadDateElem.onkeydown = function (e) {
+        e.preventDefault();
+    };
+}
 // var bodyDocument = window.document.body;
 // // $(document).on('click', '.is_cancel', function () {
 // $(window.document).on('click', '.is_cancel', async function () {

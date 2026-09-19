@@ -48,7 +48,7 @@
     </div>
     <div class="card-body pt-4">
       <div class="row g-3">
-        <div class="col-md-4">
+        <div class="col-md-3">
           <label for="mc_number_class" class="form-label">Carrier MC Number <span class="text-danger">*</span></label>
           <div class="input-group">
             <span class="input-group-text"><i class="ti ti-hash"></i></span>
@@ -68,7 +68,7 @@
           @enderror
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-3">
           <label for="owner_name" class="form-label">Carrier / Owner Name <span class="text-danger">*</span></label>
           <div class="input-group">
             <span class="input-group-text"><i class="ti ti-user"></i></span>
@@ -87,7 +87,7 @@
           @enderror
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-3">
           <label for="load_number" class="form-label">Load Reference # <span class="text-danger">*</span></label>
           <div class="input-group">
             <span class="input-group-text"><i class="ti ti-barcode"></i></span>
@@ -102,6 +102,30 @@
             />
           </div>
           @error('load_number')
+            <div class="text-danger small mt-1">{{ $message }}</div>
+          @enderror
+        </div>
+
+        <div class="col-md-3">
+          <label for="supervisor_id" class="form-label">Assign Supervisor <span class="text-muted small">(Optional)</span></label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="ti ti-user-check"></i></span>
+            <select
+              id="supervisor_id"
+              name="supervisor_id"
+              class="form-select @error('supervisor_id') is-invalid @enderror"
+            >
+              <option value="">Default ({{ Auth::user()->first_name }} {{ Auth::user()->last_name }})</option>
+              @if(isset($supervisors))
+                @foreach($supervisors as $supervisor)
+                  <option value="{{ $supervisor->id }}" {{ old('supervisor_id') == $supervisor->id ? 'selected' : '' }}>
+                    {{ $supervisor->first_name }} {{ $supervisor->last_name }}
+                  </option>
+                @endforeach
+              @endif
+            </select>
+          </div>
+          @error('supervisor_id')
             <div class="text-danger small mt-1">{{ $message }}</div>
           @enderror
         </div>

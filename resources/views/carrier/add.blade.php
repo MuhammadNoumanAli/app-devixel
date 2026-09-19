@@ -13,30 +13,6 @@
   </a>
 </div>
 
-@if (session('status'))
-  <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
-    <i class="ti ti-check me-2"></i> {{ session('status') }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  </div>
-@elseif (session('error'))
-  <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
-    <i class="ti ti-alert-circle me-2"></i> {{ session('error') }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  </div>
-@endif
-
-@if ($errors->any())
-  <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
-    <div class="fw-semibold mb-1"><i class="ti ti-alert-triangle me-1"></i> Please correct the following errors:</div>
-    <ul class="mb-0 ps-3">
-      @foreach ($errors->all() as $error)
-        <li>{{ $error }}</li>
-      @endforeach
-    </ul>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  </div>
-@endif
-
 <form method="POST" action="{{ route('carriers.store') }}" enctype="multipart/form-data">
   @csrf
 
@@ -175,6 +151,26 @@
           @error('company_name')
             <div class="text-danger small mt-1">{{ $message }}</div>
           @enderror
+        </div>
+
+        <div class="col-md-12">
+          <div class="p-3 bg-light rounded-2 border">
+            <label for="assign_to" class="form-label fw-semibold mb-1">
+              <i class="ti ti-user-check text-primary me-1"></i> Assign to Dispatcher <span class="badge bg-label-info ms-1">Optional</span>
+            </label>
+            <p class="text-muted small mb-2">Assign this new lead directly to a dispatcher. An email notification with all carrier details and uploaded compliance files will be automatically sent to them.</p>
+            <select id="assign_to" class="form-select @error('assign_to') is-invalid @enderror" name="assign_to">
+              <option value="">-- Leave Unassigned (Keep in unassigned carrier pool) --</option>
+              @foreach($dispatchers ?? [] as $dispatcher)
+                <option value="{{ $dispatcher->id }}" @selected(old('assign_to') == $dispatcher->id)>
+                  {{ $dispatcher->first_name }} {{ $dispatcher->last_name }} ({{ $dispatcher->email }})
+                </option>
+              @endforeach
+            </select>
+            @error('assign_to')
+              <div class="text-danger small mt-1">{{ $message }}</div>
+            @enderror
+          </div>
         </div>
       </div>
     </div>
@@ -510,6 +506,27 @@ document.addEventListener('DOMContentLoaded', function() {
         cb.checked = allZonesCheckbox.checked;
       });
     });
+  }
+
+  // Auto-format contact number as (XXX) XXX-XXXX
+  const numberInput = document.getElementById('number');
+  if (numberInput) {
+    const formatPhone = function(val) {
+      const digits = val.replace(/\D/g, '').substring(0, 10);
+      const match = digits.match(/^(\d{0,3})(\d{0,3})(\d{0,4})$/);
+      if (!match) return '';
+      if (!match[2]) return match[1];
+      if (!match[3]) return '(' + match[1] + ') ' + match[2];
+      return '(' + match[1] + ') ' + match[2] + '-' + match[3];
+    };
+
+    numberInput.addEventListener('input', function(e) {
+      e.target.value = formatPhone(e.target.value);
+    });
+
+    if (numberInput.value) {
+      numberInput.value = formatPhone(numberInput.value);
+    }
   }
 });
 </script>

@@ -3,11 +3,14 @@
 @section('title', 'Dispatcher PDF & Invoice Reports')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
   <div>
     <h4 class="fw-bold mb-1">Invoice Generation & Dispatcher Reports</h4>
     <p class="text-muted mb-0">Select loads to generate bulk PDF invoices or export Excel reports</p>
   </div>
+  <a href="{{ route('invoices.index') }}" class="btn btn-outline-primary">
+    <i class="ti ti-file-invoice me-1"></i> View All Invoices & Payments
+  </a>
 </div>
 
 @if (session('status'))
@@ -25,7 +28,7 @@
 <div class="card shadow-sm">
   <div class="card-header border-bottom py-3">
     <div class="row g-3 align-items-center">
-      <div class="col-md-4 col-sm-6">
+      <div class="col-md-3 col-sm-6">
         <label class="form-label small text-muted">Date Range</label>
         <input type="hidden" id="start_date1" />
         <input type="hidden" id="end_date1" />
@@ -35,19 +38,28 @@
         </div>
       </div>
 
-      <div class="col-md-4 col-sm-6">
+      <div class="col-md-3 col-sm-6">
         <label class="form-label small text-muted">Filter by MC #</label>
         <select id="select_mc_numbers" class="form-select form-select-sm">
           <option value="">-- All MC Numbers --</option>
         </select>
       </div>
 
-      <div class="col-md-4 col-sm-12 ms-auto text-md-end pt-md-3">
+      <div class="col-md-3 col-sm-6">
+        <label class="form-label small text-muted">Invoice Filter</label>
+        <select id="select_invoice_status" class="form-select form-select-sm">
+          <option value="">-- All Loads --</option>
+          <option value="uninvoiced">Uninvoiced Only (Pending)</option>
+          <option value="invoiced">Invoiced Only</option>
+        </select>
+      </div>
+
+      <div class="col-md-3 col-sm-12 ms-auto text-md-end pt-md-3">
         <input type="hidden" id="selected_invoices" name="selected_invoices">
         <div class="d-inline-flex gap-2">
           <div class="download_pdf" style="display: none;">
             <a id="pdf_dispatch_url" href="" class="btn btn-primary btn-sm">
-              <i class="ti ti-file-type-pdf me-1"></i> Download PDF
+              <i class="ti ti-download me-1"></i> Download PDF
             </a>
           </div>
           <div class="download_xlx">
@@ -76,7 +88,8 @@
           <th>Destination</th>
           <th>Delivery Date</th>
           <th>Carrier</th>
-          <th>Rate</th>
+          <th>Gross Rate</th>
+          <th>Payable Amount</th>
           <th>Invoice Status</th>
           <th class="text-center">Action</th>
         </tr>
@@ -85,7 +98,11 @@
         @foreach($dispatchers as $key => $dispatch)
           <tr>
             <td>
-              @if($dispatch->invoice_generate != 1)
+              @if($dispatch->invoice_generate == 1)
+                <div class="form-check" title="Invoice already generated (cannot be re-selected)">
+                  <input class="form-check-input" type="checkbox" disabled style="cursor: not-allowed; opacity: 0.45;">
+                </div>
+              @else
                 <div class="form-check">
                   <input class="form-check-input chcktbl" type="checkbox" name="invoice" value="{{ $dispatch->id }}">
                 </div>
@@ -98,7 +115,13 @@
             <td class="small">{{ $dispatch->delivery_location }}</td>
             <td class="small">{{ $dispatch->delivery_date ? \Carbon\Carbon::parse($dispatch->delivery_date)->format('M d, Y') : 'N/A' }}</td>
             <td class="fw-semibold">{{ $dispatch->owner_name }}</td>
-            <td class="fw-bold text-success">${{ number_format($dispatch->rate) }}</td>
+            <td class="small fw-semibold text-secondary">${{ number_format($dispatch->rate) }}</td>
+            @php
+              $payableVal = ($dispatch->receivable !== null && (float)$dispatch->receivable > 0)
+                ? (float)$dispatch->receivable
+                : (((float)$dispatch->rate > 0 && (float)$dispatch->percentage > 0) ? (float)(($dispatch->rate * $dispatch->percentage) / 100) : 0);
+            @endphp
+            <td class="fw-bold text-success">${{ number_format($payableVal, 2) }}</td>
             <td>
               <select onchange="changeInvoiceStatus(this, {{ $dispatch->id }})" class="form-select form-select-sm" style="min-width: 130px;">
                 <option value="" @selected(empty($dispatch->invoice_status))>-- Select --</option>
@@ -107,13 +130,22 @@
               </select>
             </td>
             <td class="text-center">
-              <a
-                href="{{ route('dispatchers.show', $dispatch->id) }}"
-                class="btn btn-sm btn-icon btn-text-secondary rounded-pill"
-                title="View Dispatch"
-              >
-                <i class="ti ti-eye"></i>
-              </a>
+              <div class="d-inline-flex gap-1 align-items-center">
+                <a
+                  href="{{ route('invoices.downloadDispatcherPDF', ['selected_invoices' => $dispatch->id, 'mc_number' => $dispatch->mc_number]) }}"
+                  class="btn btn-sm btn-icon btn-text-primary rounded-pill"
+                  title="Download Invoice PDF"
+                >
+                  <i class="ti ti-download fs-5"></i>
+                </a>
+                <a
+                  href="{{ route('dispatchers.show', $dispatch->id) }}"
+                  class="btn btn-sm btn-icon btn-text-secondary rounded-pill"
+                  title="View Dispatch"
+                >
+                  <i class="ti ti-eye fs-5"></i>
+                </a>
+              </div>
             </td>
           </tr>
         @endforeach

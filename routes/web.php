@@ -64,6 +64,20 @@ Route::middleware(['auth'])->group(function () {
     Route::post('carriers/{carrier}', [CarrierController::class, 'update'])->name('carriers.update');
     Route::resource('carriers', CarrierController::class);
 
+    // Assigned Carriers & Open Leads Workflow
+    Route::get('/assigned-carriers', [CarrierController::class, 'assignedCarriers'])
+        ->name('carriers.assigned')
+        ->middleware('permission:assigned-carriers-list');
+    Route::get('/open-leads', [CarrierController::class, 'openLeads'])
+        ->name('carriers.openLeads')
+        ->middleware('permission:open-leads-list');
+    Route::get('/carrier-leads/{carrier}/notes', [CarrierController::class, 'getNotes'])
+        ->name('carrierLeads.getNotes')
+        ->middleware('permission:open-leads-notes');
+    Route::post('/carrier-leads/{carrier}/notes', [CarrierController::class, 'storeNote'])
+        ->name('carrierLeads.storeNote')
+        ->middleware('permission:open-leads-notes');
+
     // Dispatchers / Loads
     Route::get('mc-details', [DispatchController::class, 'getMCDetails'])->name('dispatchers.getMCDetails');
     Route::get('dispatchers/{dispatcher}/attach-document', [DispatchController::class, 'editAttachDocument'])->name('dispatchers.editAttachDocument');
@@ -80,11 +94,17 @@ Route::middleware(['auth'])->group(function () {
     Route::get('reports/dispatcher_downloads', [ReportsController::class, 'downloadDispatcherXLS'])->name('reports.dispatcher_downloads');
 
     // Invoices
+    Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index');
     Route::get('invoices/invoices-not-paid', [InvoiceController::class, 'getAllCarrierNotPaid'])->name('invoices.getAllCarrierNotPaid');
     Route::get('invoices/dispatcher-report', [InvoiceController::class, 'viewDispatcherPDFView'])->name('invoices.viewDispatcherPDFView');
     Route::get('invoices/download-pdf', [InvoiceController::class, 'downloadDispatcherPDF'])->name('invoices.downloadDispatcherPDF');
     Route::get('invoices/download-xlx', [InvoiceController::class, 'downloadDispatcherXLX'])->name('invoices.downloadDispatcherXLX');
     Route::get('invoices/{dispatcher}/change-status', [InvoiceController::class, 'changeInvoiceStatus'])->name('invoices.changeInvoiceStatus');
+    Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'downloadInvoicePdf'])->name('invoices.downloadInvoicePdf');
+    Route::get('invoices/mc/{mcNumber}/download-all-pdf', [InvoiceController::class, 'downloadMcAllInvoicesPdf'])->name('invoices.downloadMcAllInvoicesPdf');
+    Route::post('invoices/{invoice}/payments', [InvoiceController::class, 'storePayment'])->name('invoices.payments.store');
+    Route::get('invoices/{invoice}/payments', [InvoiceController::class, 'getPayments'])->name('invoices.payments.index');
+    Route::delete('invoices/payments/{payment}', [InvoiceController::class, 'destroyPayment'])->name('invoices.payments.destroy');
 
     // Truck Types
     Route::post('truck-types/{truckType}', [TruckTypeController::class, 'update'])->name('truck-types.update');

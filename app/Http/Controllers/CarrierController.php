@@ -1151,7 +1151,15 @@ class CarrierController extends Controller
         }
 
         if ($request->filled('start_date') && $request->filled('end_date')) {
-            $query->whereBetween(DB::raw('DATE(assigned_at)'), [$request->start_date, $request->end_date]);
+            $startDate = $request->start_date;
+            $endDate = $request->end_date;
+            $query->where(function ($q) use ($startDate, $endDate) {
+                $q->whereBetween(DB::raw('DATE(assigned_at)'), [$startDate, $endDate])
+                  ->orWhere(function ($sub) use ($startDate, $endDate) {
+                      $sub->whereNull('assigned_at')
+                          ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate]);
+                  });
+            });
         }
 
         $carriers = $query->latest('assigned_at')->paginate(15)->withQueryString();

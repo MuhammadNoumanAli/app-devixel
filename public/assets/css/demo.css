@@ -114,3 +114,178 @@
   text-align: center;
   margin-top: 1rem;
 }
+
+/* ==========================================================================
+   Modern SweetAlert2 Toast Styling (Vuexy Theme Elevation)
+   ========================================================================== */
+body.swal2-toast-shown .swal2-container {
+  box-sizing: border-box !important;
+  width: auto !important;
+  max-width: 420px !important;
+  padding: 1rem 1.25rem !important;
+  background-color: transparent !important;
+  pointer-events: none !important;
+  z-index: 10999 !important;
+}
+
+body.swal2-toast-shown .swal2-container.swal2-top-end,
+body.swal2-toast-shown .swal2-container.swal2-top-right {
+  top: 75px !important;
+  right: 1.25rem !important;
+  bottom: auto !important;
+  left: auto !important;
+}
+
+/* Toast popup card */
+.light-style .swal2-popup.swal2-toast,
+.dark-style .swal2-popup.swal2-toast,
+.swal2-popup.swal2-toast {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  width: auto !important;
+  min-width: 280px !important;
+  max-width: 380px !important;
+  padding: 0.75rem 1rem !important;
+  border-radius: 0.5rem !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(75, 70, 92, 0.08) !important;
+  box-shadow: 0 0.5rem 1.25rem rgba(75, 70, 92, 0.15), 0 0.125rem 0.35rem rgba(75, 70, 92, 0.06) !important;
+  pointer-events: auto !important;
+  overflow: hidden !important;
+  gap: 0.6rem !important;
+}
+
+.dark-style .swal2-popup.swal2-toast {
+  background: #2f3349 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Toast Title - Compact, elegant 14px typography (replaces broken 2rem/32px) */
+.light-style .swal2-popup.swal2-toast .swal2-title,
+.dark-style .swal2-popup.swal2-toast .swal2-title,
+.swal2-popup.swal2-toast .swal2-title {
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  color: #383544 !important;
+  line-height: 1.4 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+  flex: 1 1 auto !important;
+  white-space: normal !important;
+}
+
+.dark-style .swal2-popup.swal2-toast .swal2-title {
+  color: #cfcde4 !important;
+}
+
+/* Crisp SweetAlert2 Icons */
+.light-style .swal2-popup.swal2-toast .swal2-icon,
+.dark-style .swal2-popup.swal2-toast .swal2-icon,
+.swal2-popup.swal2-toast .swal2-icon {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  min-width: 1.5rem !important;
+  margin: 0 !important;
+  border-width: 2px !important;
+  flex-shrink: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon.swal2-success {
+  border-color: #28c76f !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon.swal2-success .swal2-success-ring {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  border-width: 2px !important;
+  border-color: rgba(40, 199, 111, 0.25) !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon.swal2-success [class^=swal2-success-line] {
+  height: 2px !important;
+  background-color: #28c76f !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon.swal2-success .swal2-success-line-tip {
+  width: 0.45rem !important;
+  left: 0.18rem !important;
+  top: 0.72rem !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon.swal2-success .swal2-success-line-long {
+  width: 0.75rem !important;
+  right: 0.18rem !important;
+  top: 0.65rem !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon.swal2-error {
+  border-color: #ea5455 !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon.swal2-error [class^=swal2-x-mark-line] {
+  height: 2px !important;
+  width: 0.8rem !important;
+  top: 0.65rem !important;
+  background-color: #ea5455 !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon.swal2-warning {
+  border-color: #ff9f43 !important;
+  color: #ff9f43 !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon.swal2-info {
+  border-color: #00cfe8 !important;
+  color: #00cfe8 !important;
+}
+
+/* Close Button */
+.swal2-popup.swal2-toast .swal2-close {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  font-size: 1.25rem !important;
+  line-height: 1 !important;
+  color: #a5a3ae !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  align-self: center !important;
+}
+
+.swal2-popup.swal2-toast .swal2-close:hover {
+  color: #5d596c !important;
+}
+
+/* Progress Bar */
+.swal2-popup.swal2-toast .swal2-timer-progress-bar {
+  height: 3px !important;
+  background: #28c76f !important;
+}
+
+.swal2-popup.swal2-toast.swal2-icon-error .swal2-timer-progress-bar {
+  background: #ea5455 !important;
+}
+
+/* Custom Sleek Scrollbar for tables */
+.table-responsive::-webkit-scrollbar {
+  height: 5px;
+}
+.table-responsive::-webkit-scrollbar-track {
+  background: transparent;
+}
+.table-responsive::-webkit-scrollbar-thumb {
+  background: rgba(75, 70, 92, 0.15);
+  border-radius: 4px;
+}
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: rgba(75, 70, 92, 0.3);
+}

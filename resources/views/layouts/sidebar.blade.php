@@ -153,52 +153,66 @@
     @endcan
 
     <!-- Invoices -->
+    @canany(['invoices-list', 'invoices-unpaid', 'invoices-view', 'invoices-dispatcher-report'])
     <li class="menu-item {{ Request::is('invoices*') ? 'active open' : '' }}">
       <a href="javascript:void(0);" class="menu-link menu-toggle">
         <i class="menu-icon tf-icons ti ti-file-invoice"></i>
         <div>Invoices</div>
       </a>
       <ul class="menu-sub">
+        @can('invoices-list')
         <li class="menu-item {{ Request::is('invoices') || (Request::is('invoices/*') && !Request::is('invoices/invoices-not-paid*') && !Request::is('invoices/dispatcher-report*')) ? 'active' : '' }}">
           <a href="{{ route('invoices.index') }}" class="menu-link">
             <div>All Invoices</div>
           </a>
         </li>
+        @endcan
+        @can('invoices-unpaid')
         <li class="menu-item {{ Request::is('invoices/invoices-not-paid*') ? 'active' : '' }}">
           <a href="{{ route('invoices.getAllCarrierNotPaid') }}" class="menu-link">
             <div>Unpaid Invoices</div>
           </a>
         </li>
+        @endcan
+        @can('invoices-dispatcher-report')
         <li class="menu-item {{ Request::is('invoices/dispatcher-report*') ? 'active' : '' }}">
           <a href="{{ route('invoices.viewDispatcherPDFView') }}" class="menu-link">
             <div>Dispatcher Report</div>
           </a>
         </li>
+        @endcan
       </ul>
     </li>
+    @endcanany
 
     <!-- Truck Types -->
+    @canany(['truck-types-list', 'truck-types-create', 'truck-types-edit'])
     <li class="menu-item {{ Request::is('truck-types*') ? 'active open' : '' }}">
       <a href="javascript:void(0);" class="menu-link menu-toggle">
         <i class="menu-icon tf-icons ti ti-tir"></i>
         <div>Truck Types</div>
       </a>
       <ul class="menu-sub">
+        @can('truck-types-list')
         <li class="menu-item {{ Request::is('truck-types') ? 'active' : '' }}">
           <a href="{{ route('truck-types.index') }}" class="menu-link">
             <div>Truck Types List</div>
           </a>
         </li>
+        @endcan
+        @can('truck-types-create')
         <li class="menu-item {{ Request::is('truck-types/create') ? 'active' : '' }}">
           <a href="{{ route('truck-types.create') }}" class="menu-link">
             <div>Add Truck Type</div>
           </a>
         </li>
+        @endcan
       </ul>
     </li>
+    @endcanany
 
     <!-- Reports -->
-    @canany(['carriers-report', 'dispatchers-report'])
+    @canany(['carriers-report', 'dispatchers-report', 'truck-types-report'])
     <li class="menu-item {{ Request::is('reports*') ? 'active open' : '' }}">
       <a href="javascript:void(0);" class="menu-link menu-toggle">
         <i class="menu-icon tf-icons ti ti-chart-bar"></i>
@@ -219,43 +233,51 @@
           </a>
         </li>
         @endcan
+        @can('truck-types-report')
         <li class="menu-item {{ Request::is('reports/truck-types*') ? 'active' : '' }}">
           <a href="{{ route('reports.truckTypesReport') }}" class="menu-link">
             <div>Truck Types Reports</div>
           </a>
         </li>
+        @endcan
       </ul>
     </li>
     @endcanany
 
     <!-- Roles & Permissions -->
-    @role('Admin')
+    @canany(['list-roles', 'list-permission'])
     <li class="menu-item {{ Request::is('roles*') ? 'active open' : '' }}">
       <a href="javascript:void(0);" class="menu-link menu-toggle">
         <i class="menu-icon tf-icons ti ti-shield-lock"></i>
         <div>Roles & Permissions</div>
       </a>
       <ul class="menu-sub">
+        @can('list-roles')
         <li class="menu-item {{ Route::is('roles.index') ? 'active' : '' }}">
           <a href="{{ route('roles.index') }}" class="menu-link">
             <div>Roles List</div>
           </a>
         </li>
+        @endcan
+        @can('list-permission')
         <li class="menu-item {{ Route::is('roles.permissionIndex') ? 'active' : '' }}">
           <a href="{{ route('roles.permissionIndex') }}" class="menu-link">
             <div>Permissions Matrix</div>
           </a>
         </li>
+        @endcan
       </ul>
     </li>
+    @endcanany
 
     <!-- Settings -->
+    @can('settings')
     <li class="menu-item {{ Request::is('settings*') ? 'active' : '' }}">
       <a href="{{ route('settings.index') }}" class="menu-link">
         <i class="menu-icon tf-icons ti ti-settings"></i>
         <div>Settings</div>
       </a>
     </li>
-    @endrole
+    @endcan
   </ul>
 </aside>

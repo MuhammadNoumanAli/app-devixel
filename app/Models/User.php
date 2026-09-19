@@ -17,6 +17,7 @@ class User extends Authenticatable
         'last_name',
         'name',
         'email',
+        'avatar',
         'password',
         'status',
         'load_commission',
@@ -82,5 +83,16 @@ class User extends Authenticatable
     public function isOnline()
     {
         return \Illuminate\Support\Facades\Cache::has('user-online-' . $this->id);
+    }
+
+    public function getAvatarUrlAttribute()
+    {
+        if ($this->avatar && file_exists(public_path($this->avatar))) {
+            return asset($this->avatar);
+        }
+        if ($this->avatar && file_exists(public_path('storage/' . $this->avatar))) {
+            return asset('storage/' . $this->avatar);
+        }
+        return null;
     }
 }

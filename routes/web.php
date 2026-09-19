@@ -53,7 +53,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Users
-    Route::get('users/{user}/change-status', [UserController::class, 'changeStatus'])->name('users.changeStatus');
+    Route::match(['get', 'post'], 'users/{user}/change-status', [UserController::class, 'changeStatus'])->name('users.changeStatus');
     Route::get('users/change-password/{user}', [UserController::class, 'changePasswordForm'])->name('users.changePasswordForm');
     Route::patch('users/update-password/{user}', [UserController::class, 'updatePassword'])->name('users.updatePassword');
     Route::resource('users', UserController::class);

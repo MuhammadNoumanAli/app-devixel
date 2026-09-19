@@ -51,7 +51,9 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        $this->authorize('edit-users');
+        if (!auth()->user()->can('edit-users') && !auth()->user()->hasRole('Admin') && auth()->id() != $user->id) {
+            abort(403, 'Unauthorized action.');
+        }
         $data['roles'] = Role::get();
         $data['user'] = $user;
         $data['user_roles'] = $user->roles->pluck('id')->toArray(); // Get user's role IDs
@@ -63,47 +65,124 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        $this->authorize('edit-users');
+        if (!auth()->user()->can('edit-users') && !auth()->user()->hasRole('Admin') && auth()->id() != $user->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $validated = $request->validate([
-            'first_name'    => ['required', 'string', 'max:255'],
-            'last_name'     => ['required', 'string', 'max:255'],
-            'load_commission' => ['nullable','numeric','between:0,99999.99'],
+            'first_name'      => ['required', 'string', 'max:255'],
+            'last_name'       => ['required', 'string', 'max:255'],
+            'load_commission' => ['nullable', 'numeric', 'between:0,99999.99'],
+            'avatar'          => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048'],
         ]);
 
         $user->first_name = $request->first_name;
         $user->last_name = $request->last_name;
-        $user->name = $request->first_name . " " . $request->last_name;
-        if ($request->has('load_commission') && !is_null($request['load_commission'])){
+        $user->name = trim($request->first_name . " " . $request->last_name);
+
+        if ($request->has('load_commission') && !is_null($request['load_commission'])) {
             $user->load_commission = $request->load_commission;
         }
+
+        // Handle avatar upload
+        if ($request->hasFile('avatar')) {
+            $file = $request->file('avatar');
+            $avatarFilename = 'avatar_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $destinationPath = public_path('uploads/avatars');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+            // Remove previous avatar file if exists
+            if ($user->avatar && file_exists(public_path($user->avatar))) {
+                @unlink(public_path($user->avatar));
+            }
+            $file->move($destinationPath, $avatarFilename);
+            $user->avatar = 'uploads/avatars/' . $avatarFilename;
+        }
+
         $result = $user->save();
-        if($result){
-            $role_name = $user->getRoleNames();
-            if($request['user_type'] != $role_name[0]){
-                $user->removeRole($role_name[0]);
-                $user->assignRole($request['user_type']);
+        if ($result) {
+            // Super Admin (User #1) role CANNOT be changed
+            if ($user->id != 1 && (auth()->user()->can('edit-users') || auth()->user()->hasRole('Admin')) && $request->filled('user_type')) {
+                $role_name = $user->getRoleNames();
+                if (empty($role_name[0]) || $request['user_type'] != $role_name[0]) {
+                    if (!empty($role_name[0])) {
+                        $user->removeRole($role_name[0]);
+                    }
+                    $user->assignRole($request['user_type']);
+                }
             }
             return redirect()->route('users.index')->with('status', 'Data Updated Successfully!');
-        }else{
+        } else {
             return redirect()->route('users.index')->with('error', 'Something Went Wrong');
         }
     }
 
     public function changeStatus(Request $request, User $user)
     {
-        $this->authorize('change-users-status');
-        // Retrieve the selected status from the request
-        $selectedStatus = $request->input('status');
+        if (!auth()->user()->can('change-users-status') && !auth()->user()->can('edit-users') && !auth()->user()->hasRole('Admin')) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized action.'
+                ], 403);
+            }
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Prevent modifying Super Admin
+        if ($user->id == 1) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Status cannot be changed.'
+                ], 403);
+            }
+            return redirect()->route('users.index')->with('error', 'Status cannot be changed.');
+        }
+
+        // Prevent user from changing their own status
+        if (auth()->check() && auth()->id() == $user->id) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'You cannot change your own status.'
+                ], 403);
+            }
+            return redirect()->route('users.index')->with('error', 'You cannot change your own status.');
+        }
+
+        // Retrieve the selected status from the request or toggle existing
+        $newStatus = $request->input('status');
+        if (!$newStatus || !in_array($newStatus, ['active', 'inactive'])) {
+            $newStatus = ($user->status === 'active') ? 'inactive' : 'active';
+        }
 
         // Update the user's status
-        $user->status = $selectedStatus;
+        $user->status = $newStatus;
         $success = $user->save();
-        if($success){
-            return response(['message' => 'Status Updated', 'status' => true ], 200);
-        }
-        return response(['message' => 'Status Updated', 'status' => false ], 200);
 
-        // Return a response indicating the updated status
+        if ($request->ajax() || $request->wantsJson()) {
+            if ($success) {
+                return response()->json([
+                    'status' => true,
+                    'user_id' => $user->id,
+                    'new_status' => $user->status,
+                    'status_label' => ucfirst($user->status),
+                    'badge_class' => $user->status === 'active' ? 'bg-label-success' : 'bg-label-danger',
+                    'message' => 'User status updated to ' . ucfirst($user->status) . ' successfully!'
+                ], 200);
+            }
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to update user status.'
+            ], 500);
+        }
+
+        if ($success) {
+            return redirect()->route('users.index')->with('status', 'User status updated to ' . ucfirst($user->status) . ' successfully!');
+        }
+        return redirect()->route('users.index')->with('error', 'Failed to update user status.');
     }
 
     /**
@@ -114,7 +193,7 @@ class UserController extends Controller
         $this->authorize('delete-users');
 
         if ($user->id == 1) {
-            return redirect()->route('users.index')->with('error', 'Super Admin (User #1) cannot be deleted.');
+            return redirect()->route('users.index')->with('error', 'Super Admin cannot be deleted.');
         }
 
         if($user->delete()){

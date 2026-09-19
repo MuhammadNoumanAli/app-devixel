@@ -894,13 +894,13 @@
       var isMuted = $(this).data('muted') === true;
       if (!isMuted) {
         $(this).data('muted', true).html('<i class="ti ti-bell me-2 ti-xs"></i>Unmute Notifications');
-        if (typeof Swal !== 'undefined') {
-          Swal.fire({ icon: 'info', title: 'Notifications Muted', text: 'Alerts muted for this conversation.', timer: 1500, showConfirmButton: false });
+        if (typeof window.showToast === 'function') {
+          window.showToast('Notifications muted for this conversation.', 'info');
         }
       } else {
         $(this).data('muted', false).html('<i class="ti ti-bell-off me-2 ti-xs"></i>Mute Notifications');
-        if (typeof Swal !== 'undefined') {
-          Swal.fire({ icon: 'success', title: 'Notifications Unmuted', text: 'Alerts enabled for this conversation.', timer: 1500, showConfirmButton: false });
+        if (typeof window.showToast === 'function') {
+          window.showToast('Notifications unmuted.', 'success');
         }
       }
     });
@@ -917,7 +917,9 @@
           confirmButtonText: 'Yes, Block Contact'
         }).then(function(result) {
           if (result.isConfirmed) {
-            Swal.fire({ icon: 'success', title: 'Contact Blocked', timer: 1500, showConfirmButton: false });
+            if (typeof window.showToast === 'function') {
+              window.showToast('Contact blocked successfully.', 'success');
+            }
           }
         });
       }
@@ -940,7 +942,9 @@
           confirmButtonText: 'Submit Report'
         }).then(function(result) {
           if (result.isConfirmed && result.value) {
-            Swal.fire({ icon: 'success', title: 'Report Submitted', text: 'Thank you for reporting.', timer: 1800, showConfirmButton: false });
+            if (typeof window.showToast === 'function') {
+              window.showToast('Report submitted. Thank you for reporting.', 'success');
+            }
           }
         });
       }
@@ -994,19 +998,17 @@
             }
             $('#app-chat-sidebar-right').removeClass('show');
 
-            if (typeof Swal !== 'undefined') {
-              Swal.fire({
-                icon: 'success',
-                title: 'Cleared!',
-                text: 'Chat history cleared successfully.',
-                timer: 1500,
-                showConfirmButton: false
-              });
+            if (typeof window.showToast === 'function') {
+              window.showToast('Chat history cleared successfully.', 'success');
             }
           }
         },
         error: function() {
-          alert('Failed to clear chat history.');
+          if (typeof window.showToast === 'function') {
+            window.showToast('Failed to clear chat history.', 'error');
+          } else {
+            alert('Failed to clear chat history.');
+          }
         }
       });
     }

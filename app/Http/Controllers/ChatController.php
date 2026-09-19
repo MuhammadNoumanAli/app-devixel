@@ -164,6 +164,9 @@ class ChatController extends Controller
 
         $attachmentPath = null;
         if ($request->hasFile('attachment')) {
+            if (!Auth::user()->can('chat-send-file') && !Auth::user()->hasRole('Admin')) {
+                return response()->json(['status' => 'error', 'message' => 'You do not have permission to send file attachments.'], 403);
+            }
             $attachmentPath = $request->file('attachment')->store('chat_attachments', 'public');
         }
 
@@ -239,6 +242,13 @@ class ChatController extends Controller
 
     public function clearChat($userId)
     {
+        if (!Auth::user()->can('chat-clear-history') && !Auth::user()->hasRole('Admin')) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to clear chat conversation history.'
+            ], 403);
+        }
+
         $currentUserId = Auth::id();
         Message::between($currentUserId, $userId)->delete();
 

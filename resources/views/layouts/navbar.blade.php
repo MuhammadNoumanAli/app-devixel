@@ -90,20 +90,28 @@
       <li class="nav-item navbar-dropdown dropdown-user dropdown">
         <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
           <div class="avatar avatar-online">
-            <span class="avatar-initial rounded-circle bg-label-primary font-weight-bold">
-              {{ strtoupper(substr(Auth::user()->first_name ?? 'U', 0, 1)) }}
-            </span>
+            @if(Auth::user()->avatar && file_exists(public_path(Auth::user()->avatar)))
+              <img src="{{ asset(Auth::user()->avatar) }}" alt="{{ Auth::user()->full_name }}" class="rounded-circle" style="object-fit: cover;">
+            @else
+              <span class="avatar-initial rounded-circle bg-label-primary font-weight-bold">
+                {{ strtoupper(substr(Auth::user()->first_name ?? 'U', 0, 1)) }}
+              </span>
+            @endif
           </div>
         </a>
         <ul class="dropdown-menu dropdown-menu-end">
           <li>
-            <a class="dropdown-item" href="javascript:void(0);">
+            <a class="dropdown-item" href="{{ route('users.edit', Auth::id()) }}">
               <div class="d-flex">
                 <div class="flex-shrink-0 me-3">
                   <div class="avatar avatar-online">
-                    <span class="avatar-initial rounded-circle bg-label-primary font-weight-bold">
-                      {{ strtoupper(substr(Auth::user()->first_name ?? 'U', 0, 1)) }}
-                    </span>
+                    @if(Auth::user()->avatar && file_exists(public_path(Auth::user()->avatar)))
+                      <img src="{{ asset(Auth::user()->avatar) }}" alt="{{ Auth::user()->full_name }}" class="rounded-circle" style="object-fit: cover;">
+                    @else
+                      <span class="avatar-initial rounded-circle bg-label-primary font-weight-bold">
+                        {{ strtoupper(substr(Auth::user()->first_name ?? 'U', 0, 1)) }}
+                      </span>
+                    @endif
                   </div>
                 </div>
                 <div class="flex-grow-1">
@@ -115,6 +123,12 @@
           </li>
           <li>
             <div class="dropdown-divider"></div>
+          </li>
+          <li>
+            <a class="dropdown-item" href="{{ route('users.edit', Auth::id()) }}">
+              <i class="ti ti-user-circle me-2 ti-sm"></i>
+              <span class="align-middle">Edit Profile & Avatar</span>
+            </a>
           </li>
           <li>
             <a class="dropdown-item" href="{{ route('chat.index') }}">

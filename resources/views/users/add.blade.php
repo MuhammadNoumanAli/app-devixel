@@ -18,8 +18,44 @@
     <h5 class="card-title mb-0">User Information</h5>
   </div>
   <div class="card-body pt-4">
-    <form method="POST" action="{{ route('register') }}">
+    <form method="POST" action="{{ route('register') }}" enctype="multipart/form-data">
       @csrf
+
+      <!-- Avatar Upload Section -->
+      <div class="d-flex align-items-center gap-4 mb-4 pb-3 border-bottom">
+        <div class="position-relative">
+          <img
+            id="avatar_preview"
+            src="https://ui-avatars.com/api/?name=New+User&background=7367F0&color=fff&size=100"
+            alt="user avatar"
+            class="d-block rounded-circle"
+            height="100"
+            width="100"
+            style="object-fit: cover; border: 3px solid #7367f0;"
+          />
+        </div>
+        <div class="button-wrapper">
+          <label for="upload_avatar" class="btn btn-primary btn-sm me-2 mb-1" tabindex="0">
+            <i class="ti ti-upload me-1"></i> Upload Photo
+            <input
+              type="file"
+              id="upload_avatar"
+              name="avatar"
+              class="d-none"
+              accept="image/png, image/jpeg, image/jpg, image/webp, image/gif"
+              onchange="previewAvatar(this)"
+            />
+          </label>
+          <button type="button" class="btn btn-outline-secondary btn-sm mb-1" onclick="resetAvatar()">
+            <i class="ti ti-refresh me-1"></i> Reset
+          </button>
+          <div class="text-muted small mt-1">Allowed JPG, PNG, GIF or WEBP. Max size 2MB.</div>
+          @error('avatar')
+            <div class="text-danger small mt-1">{{ $message }}</div>
+          @enderror
+        </div>
+      </div>
+
       <div class="row g-3">
         <div class="col-md-6">
           <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
@@ -146,4 +182,35 @@
     </form>
   </div>
 </div>
+
+<script>
+const originalAvatarSrc = document.getElementById('avatar_preview').src;
+
+function previewAvatar(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('avatar_preview').src = e.target.result;
+    }
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function resetAvatar() {
+  document.getElementById('upload_avatar').value = '';
+  document.getElementById('avatar_preview').src = originalAvatarSrc;
+}
+
+function getLoadCommission() {
+  const roleSelect = document.getElementById('user_type');
+  const commDiv = document.querySelector('.div_load_commission');
+  if (roleSelect && commDiv) {
+    if (roleSelect.value === 'Dispatcher') {
+      commDiv.style.display = 'block';
+    } else {
+      commDiv.style.display = 'none';
+    }
+  }
+}
+</script>
 @endsection

@@ -71,33 +71,54 @@
                   />
                 </div>
                 <div class="col-12">
-                  <h5>Role Permissions</h5>
-                  <div class="table-responsive">
-                    <table class="table table-flush-spacing">
-                      <tbody>
-                        @foreach($permissions->chunk(3) as $permChunk)
-                          <tr>
-                            @foreach($permChunk as $p)
-                              <td>
-                                <div class="form-check">
-                                  <input
-                                    class="form-check-input"
-                                    type="checkbox"
-                                    name="permissions[]"
-                                    value="{{ $p->name }}"
-                                    id="perm_{{ $role->id }}_{{ $p->id }}"
-                                    {{ $role->hasPermissionTo($p->name) ? 'checked' : '' }}
-                                  />
-                                  <label class="form-check-label" for="perm_{{ $role->id }}_{{ $p->id }}">
-                                    {{ ucfirst(str_replace('-', ' ', $p->name)) }}
-                                  </label>
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0">Role Permissions (Module-Wise)</h5>
+                    <div class="btn-group btn-group-sm">
+                      <button type="button" class="btn btn-outline-primary btn-sm" onclick="toggleAllModalPerms('editRoleModal{{ $role->id }}', true)">Select All</button>
+                      <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAllModalPerms('editRoleModal{{ $role->id }}', false)">Deselect All</button>
+                    </div>
+                  </div>
+                  <div class="accordion" id="accordionEditRole{{ $role->id }}" style="max-height: 380px; overflow-y: auto;">
+                    @foreach($groupedPermissions as $modName => $modInfo)
+                      @php
+                        $modSlug = \Illuminate\Support\Str::slug($modName);
+                        $modPerms = $modInfo['permissions'];
+                        $rolePermNames = $role->permissions->pluck('name')->toArray();
+                        $hasActive = count(array_intersect(array_keys($modPerms), $rolePermNames)) > 0;
+                      @endphp
+                      <div class="accordion-item border mb-2 rounded shadow-none">
+                        <h2 class="accordion-header" id="headingEdit_{{ $role->id }}_{{ $modSlug }}">
+                          <button class="accordion-button py-2 px-3 {{ $hasActive ? '' : 'collapsed' }} bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEdit_{{ $role->id }}_{{ $modSlug }}" aria-expanded="{{ $hasActive ? 'true' : 'false' }}">
+                            <i class="{{ $modInfo['icon'] }} me-2 text-primary"></i>
+                            <span class="fw-semibold me-auto">{{ $modName }}</span>
+                          </button>
+                        </h2>
+                        <div id="collapseEdit_{{ $role->id }}_{{ $modSlug }}" class="accordion-collapse collapse {{ $hasActive ? 'show' : '' }}">
+                          <div class="accordion-body p-3 bg-white">
+                            <div class="row g-2">
+                              @foreach($modPerms as $pKey => $pLabel)
+                                <div class="col-md-6 col-12">
+                                  <div class="form-check">
+                                    <input
+                                      class="form-check-input modal-perm-check"
+                                      type="checkbox"
+                                      name="permissions[]"
+                                      value="{{ $pKey }}"
+                                      id="perm_edit_{{ $role->id }}_{{ $pKey }}"
+                                      {{ in_array($pKey, $rolePermNames) ? 'checked' : '' }}
+                                    />
+                                    <label class="form-check-label small cursor-pointer" for="perm_edit_{{ $role->id }}_{{ $pKey }}">
+                                      <span class="fw-semibold d-block text-dark">{{ $pLabel }}</span>
+                                      <span class="text-muted font-monospace" style="font-size: 0.7rem;">{{ $pKey }}</span>
+                                    </label>
+                                  </div>
                                 </div>
-                              </td>
-                            @endforeach
-                          </tr>
-                        @endforeach
-                      </tbody>
-                    </table>
+                              @endforeach
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    @endforeach
                   </div>
                 </div>
                 <div class="col-12 text-center mt-4">
@@ -161,9 +182,13 @@
             <td>
               <div class="d-flex align-items-center">
                 <div class="avatar avatar-sm me-3">
-                  <span class="avatar-initial rounded-circle bg-label-primary font-weight-bold">
-                    {{ strtoupper(substr($user->first_name ?? 'U', 0, 1)) }}
-                  </span>
+                  @if($user->avatar && file_exists(public_path($user->avatar)))
+                    <img src="{{ asset($user->avatar) }}" alt="{{ $user->full_name }}" class="rounded-circle" style="object-fit: cover; width: 38px; height: 38px;">
+                  @else
+                    <span class="avatar-initial rounded-circle bg-label-primary font-weight-bold">
+                      {{ strtoupper(substr($user->first_name ?? 'U', 0, 1)) }}
+                    </span>
+                  @endif
                 </div>
                 <div>
                   <h6 class="mb-0 text-body">{{ $user->full_name }}</h6>
@@ -233,32 +258,51 @@
             />
           </div>
           <div class="col-12">
-            <h5>Role Permissions</h5>
-            <div class="table-responsive">
-              <table class="table table-flush-spacing">
-                <tbody>
-                  @foreach($permissions->chunk(3) as $permChunk)
-                    <tr>
-                      @foreach($permChunk as $p)
-                        <td>
-                          <div class="form-check">
-                            <input
-                              class="form-check-input"
-                              type="checkbox"
-                              name="permissions[]"
-                              value="{{ $p->name }}"
-                              id="add_perm_{{ $p->id }}"
-                            />
-                            <label class="form-check-label" for="add_perm_{{ $p->id }}">
-                              {{ ucfirst(str_replace('-', ' ', $p->name)) }}
-                            </label>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5 class="mb-0">Role Permissions (Module-Wise)</h5>
+              <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="toggleAllModalPerms('addRoleModal', true)">Select All</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAllModalPerms('addRoleModal', false)">Deselect All</button>
+              </div>
+            </div>
+            <div class="accordion" id="accordionAddRole" style="max-height: 380px; overflow-y: auto;">
+              @foreach($groupedPermissions as $modName => $modInfo)
+                @php
+                  $modSlug = \Illuminate\Support\Str::slug($modName);
+                  $modPerms = $modInfo['permissions'];
+                @endphp
+                <div class="accordion-item border mb-2 rounded shadow-none">
+                  <h2 class="accordion-header" id="headingAdd_{{ $modSlug }}">
+                    <button class="accordion-button py-2 px-3 {{ $loop->first ? '' : 'collapsed' }} bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdd_{{ $modSlug }}" aria-expanded="{{ $loop->first ? 'true' : 'false' }}">
+                      <i class="{{ $modInfo['icon'] }} me-2 text-primary"></i>
+                      <span class="fw-semibold me-auto">{{ $modName }}</span>
+                    </button>
+                  </h2>
+                  <div id="collapseAdd_{{ $modSlug }}" class="accordion-collapse collapse {{ $loop->first ? 'show' : '' }}">
+                    <div class="accordion-body p-3 bg-white">
+                      <div class="row g-2">
+                        @foreach($modPerms as $pKey => $pLabel)
+                          <div class="col-md-6 col-12">
+                            <div class="form-check">
+                              <input
+                                class="form-check-input modal-perm-check"
+                                type="checkbox"
+                                name="permissions[]"
+                                value="{{ $pKey }}"
+                                id="perm_add_{{ $pKey }}"
+                              />
+                              <label class="form-check-label small cursor-pointer" for="perm_add_{{ $pKey }}">
+                                <span class="fw-semibold d-block text-dark">{{ $pLabel }}</span>
+                                <span class="text-muted font-monospace" style="font-size: 0.7rem;">{{ $pKey }}</span>
+                              </label>
+                            </div>
                           </div>
-                        </td>
-                      @endforeach
-                    </tr>
-                  @endforeach
-                </tbody>
-              </table>
+                        @endforeach
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              @endforeach
             </div>
           </div>
           <div class="col-12 text-center mt-4">
@@ -270,4 +314,10 @@
     </div>
   </div>
 </div>
+
+<script>
+function toggleAllModalPerms(modalId, check) {
+  document.querySelectorAll('#' + modalId + ' .modal-perm-check').forEach(el => el.checked = check);
+}
+</script>
 @endsection

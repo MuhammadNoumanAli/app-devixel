@@ -27,6 +27,10 @@ class InvoiceController extends Controller
      */
     public function index(Request $request)
     {
+        if (!Auth::user()->can('invoices-list') && !Auth::user()->hasRole('Admin')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $statusTab = $request->get('status', 'all');
         $mcFilter  = $request->get('mc_number');
         $search    = $request->get('search');

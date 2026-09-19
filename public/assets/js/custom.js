@@ -333,32 +333,6 @@ function updateUrlTruckType() {
 // =========== Set the filter of the truck type ==============//
 
 
-$('#user-table').on('click', '.status-dot', async function () {
-    var dot = $(this);
-    var userId = dot.data('user-id');
-    var currentStatus = dot.data('status');
-    var newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-    await $.ajax({
-        type: 'get',
-        url: '/users/' + userId + '/change-status',
-        data: { status: newStatus },
-        success: function (response) {
-            if (response.status == true) {
-                dot.removeClass('active inactive').addClass(newStatus);
-                dot.data('status', newStatus);
-            } else {
-                Swal.fire(
-                    'Fail',
-                    response.message,
-                    'error'
-                )
-            }
-        },
-        error: function (xhr, status, error) {
-            console.log('AJAX request failed');
-        }
-    });
-});
 
 function getDispatchId(data, carrierId) {
     // Show the loader and blur the background before making the AJAX request

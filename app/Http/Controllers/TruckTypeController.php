@@ -13,7 +13,9 @@ class TruckTypeController extends Controller
      */
     public function index()
     {
-        $this->authorize('list-trucks');
+        if (!auth()->user()->can('truck-types-list') && !auth()->user()->can('list-trucks') && !auth()->user()->hasRole('Admin')) {
+            abort(403, 'Unauthorized action.');
+        }
         $truckTypes = TruckType::latest()->paginate(10);
         return view('truckTypes.index', [
             'truckTypes' => $truckTypes,
@@ -26,7 +28,9 @@ class TruckTypeController extends Controller
      */
     public function create()
     {
-        $this->authorize('add-truck');
+        if (!auth()->user()->can('truck-types-create') && !auth()->user()->can('add-truck') && !auth()->user()->hasRole('Admin')) {
+            abort(403, 'Unauthorized action.');
+        }
         return view('truckTypes.add');
     }
 
@@ -35,7 +39,9 @@ class TruckTypeController extends Controller
      */
     public function store(TruckTypeRequest $request)
     {
-        $this->authorize('add-truck');
+        if (!auth()->user()->can('truck-types-create') && !auth()->user()->can('add-truck') && !auth()->user()->hasRole('Admin')) {
+            abort(403, 'Unauthorized action.');
+        }
         $truck_type = new TruckType();
         $truck_type->name = $request->name;
         $truck_type->commission = $request->commission;
@@ -58,7 +64,9 @@ class TruckTypeController extends Controller
      */
     public function edit(Request $request, TruckType $truckType)
     {
-        $this->authorize('edit-truck');
+        if (!auth()->user()->can('truck-types-edit') && !auth()->user()->can('edit-truck') && !auth()->user()->hasRole('Admin')) {
+            abort(403, 'Unauthorized action.');
+        }
         if ($request->ajax()){
             $html ='<form id="updateTruckTypeForm" method="POST" data-truck-id="'.$truckType->id.'" action="'.route('truck-types.update', $truckType->id).'" class="row g-3" enctype="multipart/form-data">
                 <div class="row show-errors" style="display:none;">
@@ -93,7 +101,9 @@ class TruckTypeController extends Controller
      */
     public function update(Request $request, TruckType $truckType)
     {
-        $this->authorize('edit-truck');
+        if (!auth()->user()->can('truck-types-edit') && !auth()->user()->can('edit-truck') && !auth()->user()->hasRole('Admin')) {
+            abort(403, 'Unauthorized action.');
+        }
         $request->validate([
             'name' => 'required|string|max:255',
             'commission' => 'nullable|numeric|between:0,100',
@@ -126,7 +136,9 @@ class TruckTypeController extends Controller
      */
     public function destroy(TruckType $truckType)
     {
-        $this->authorize('delete-truck');
+        if (!auth()->user()->can('truck-types-delete') && !auth()->user()->can('delete-truck') && !auth()->user()->hasRole('Admin')) {
+            abort(403, 'Unauthorized action.');
+        }
         if($truckType->delete()){
             return redirect()->back()->with('status', 'Record Deleted Successfully!');
         }else{

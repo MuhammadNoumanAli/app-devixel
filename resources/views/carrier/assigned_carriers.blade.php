@@ -81,8 +81,8 @@
 <!-- Filters Card -->
 <div class="card shadow-sm mb-4">
   <div class="card-body py-3">
-    <form method="GET" action="{{ route('carriers.assigned') }}" class="row g-3 align-items-end">
-      <div class="col-md-3 col-sm-6">
+    <form method="GET" action="{{ route('carriers.assigned') }}" id="assignedFilterForm" class="row g-3 align-items-end">
+      <div class="{{ $isAdmin ? 'col-md-3' : 'col-md-4' }} col-sm-6">
         <label class="form-label small fw-semibold">Search Carrier</label>
         <div class="input-group input-group-merge">
           <span class="input-group-text"><i class="ti ti-search"></i></span>
@@ -91,7 +91,7 @@
       </div>
 
       @if($isAdmin)
-      <div class="col-md-3 col-sm-6">
+      <div class="col-md-2 col-sm-6">
         <label class="form-label small fw-semibold">Dispatcher</label>
         <select name="dispatcher_id" class="form-select form-select-sm">
           <option value="">All Dispatchers</option>
@@ -116,22 +116,22 @@
         </select>
       </div>
 
-      <div class="col-md-2 col-sm-6">
-        <label class="form-label small fw-semibold">Assigned Date From</label>
-        <input type="date" name="start_date" class="form-control form-control-sm" value="{{ request('start_date') }}">
+      <div class="{{ $isAdmin ? 'col-md-3' : 'col-md-4' }} col-sm-6">
+        <label class="form-label small fw-semibold">Date Range</label>
+        <input type="hidden" id="start_date_assigned" name="start_date" value="{{ request('start_date') }}" />
+        <input type="hidden" id="end_date_assigned" name="end_date" value="{{ request('end_date') }}" />
+        <div id="reportrange_assigned" class="form-control form-control-sm bg-white d-flex align-items-center justify-content-between" style="cursor: pointer;">
+          <span class="small text-truncate"></span>
+          <i class="ti ti-calendar ti-xs text-muted ms-1"></i>
+        </div>
       </div>
 
-      <div class="col-md-2 col-sm-6">
-        <label class="form-label small fw-semibold">Assigned Date To</label>
-        <input type="date" name="end_date" class="form-control form-control-sm" value="{{ request('end_date') }}">
-      </div>
-
-      <div class="col-12 d-flex gap-2 justify-content-end">
-        <button type="submit" class="btn btn-sm btn-primary">
-          <i class="ti ti-filter me-1"></i> Apply Filters
+      <div class="col-md-2 col-sm-12 d-flex gap-2">
+        <button type="submit" class="btn btn-sm btn-primary flex-fill">
+          <i class="ti ti-filter me-1"></i> Filter
         </button>
-        <a href="{{ route('carriers.assigned') }}" class="btn btn-sm btn-outline-secondary">
-          <i class="ti ti-rotate me-1"></i> Reset
+        <a href="{{ route('carriers.assigned') }}" class="btn btn-sm btn-outline-secondary" title="Reset Filters">
+          <i class="ti ti-rotate"></i>
         </a>
       </div>
     </form>
@@ -271,3 +271,54 @@
   </div>
 </div>
 @endsection
+
+@push('page-script')
+<script>
+  $(function() {
+    var hasStart = '{{ request('start_date') }}';
+    var hasEnd = '{{ request('end_date') }}';
+
+    var start = hasStart ? moment('{{ request('start_date') }}') : moment().subtract(29, 'days');
+    var end = hasEnd ? moment('{{ request('end_date') }}') : moment();
+
+    function cbAssignedDate(start, end, isInit) {
+      if (!hasStart && !hasEnd && isInit) {
+        $('#reportrange_assigned span').html('All Dates (Click to filter)');
+        $('#start_date_assigned').val('');
+        $('#end_date_assigned').val('');
+      } else {
+        $('#reportrange_assigned span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+        $('#start_date_assigned').val(start.format('YYYY-MM-DD'));
+        $('#end_date_assigned').val(end.format('YYYY-MM-DD'));
+      }
+    }
+
+    $('#reportrange_assigned').daterangepicker({
+      startDate: start,
+      endDate: end,
+      ranges: {
+        'Today': [moment(), moment()],
+        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+        'This Month': [moment().startOf('month'), moment().endOf('month')],
+        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+      }
+    }, function(selectedStart, selectedEnd) {
+      hasStart = true;
+      hasEnd = true;
+      cbAssignedDate(selectedStart, selectedEnd, false);
+      document.getElementById('assignedFilterForm').submit();
+    });
+
+    cbAssignedDate(start, end, true);
+
+    $('#reportrange_assigned').on('cancel.daterangepicker', function(ev, picker) {
+      $('#start_date_assigned').val('');
+      $('#end_date_assigned').val('');
+      $('#reportrange_assigned span').html('All Dates (Click to filter)');
+      document.getElementById('assignedFilterForm').submit();
+    });
+  });
+</script>
+@endpush

@@ -121,6 +121,61 @@ class RolePermissionController extends Controller
                     'settings' => 'Manage System Settings & Email Config',
                 ],
             ],
+            'HR Employees' => [
+                'icon' => 'ti ti-user-check',
+                'description' => 'Employee profiles, designations, joining dates, base salaries, and dispatcher target bonus setup',
+                'permissions' => [
+                    'hr-employees-list' => 'View Employee Profiles & Salary Information',
+                    'hr-employees-edit' => 'Edit Base Salary, Bank Info, Thumb ID & Dispatcher Targets',
+                ],
+            ],
+            'HR Attendance & Punches' => [
+                'icon' => 'ti ti-fingerprint',
+                'description' => 'Biometric thumb scans, web kiosk clock-in/out, late arrivals calculation, and supervisor regularization',
+                'permissions' => [
+                    'hr-attendance-list' => 'View Punch Ledger & Daily Attendance Records',
+                    'hr-attendance-punch' => 'Self Clock-In / Clock-Out (Web Kiosk / Thumb Scan)',
+                    'hr-attendance-regularize' => 'Approve & Regularize Missed Punches / Waive Late Deductions',
+                ],
+            ],
+            'HR Leaves & Holidays' => [
+                'icon' => 'ti ti-calendar-event',
+                'description' => 'Leave applications, approvals, monthly paid leaves quota, public holidays calendar, and working weekend swaps',
+                'permissions' => [
+                    'hr-leaves-list' => 'View Leave Applications & Balance Quotas',
+                    'hr-leaves-apply' => 'Submit Leave Application',
+                    'hr-leaves-approve' => 'Approve or Reject Leave Applications',
+                    'hr-holidays-manage' => 'Manage Public Holidays & Working Weekend / Compensatory Off Exceptions',
+                ],
+            ],
+            'HR Payroll & Payslips' => [
+                'icon' => 'ti ti-receipt-2',
+                'description' => 'Monthly payroll calculation batches, sales lead bonuses, dispatcher targets, Normal Payslip, Detailed Payslip, and bank export',
+                'permissions' => [
+                    'hr-payroll-list' => 'View Monthly Payroll Cycles & Batches',
+                    'hr-payroll-generate' => 'Calculate & Process Monthly Payroll Batch',
+                    'hr-payroll-lock' => 'Approve & Lock Payroll Batch (Freeze Historical Records)',
+                    'hr-payslip-normal' => 'View & Download Normal Payslip (Slip 1: Base + Commissions - Deductions)',
+                    'hr-payslip-detailed' => 'View & Download Detailed Payslip (Slip 2: Full Itemized Audit Trail)',
+                    'hr-payroll-export' => 'Export Bank Disbursement Spreadsheets (Excel / XLSX)',
+                ],
+            ],
+            'HR Loans & Advances' => [
+                'icon' => 'ti ti-cash',
+                'description' => 'Staff loan applications, approval workflows, monthly installment schedule, and payroll recovery',
+                'permissions' => [
+                    'hr-loans-list' => 'View Staff Loans & Installment Schedules',
+                    'hr-loans-manage' => 'Create, Approve, Waive & Adjust Loans',
+                ],
+            ],
+            'HR Settings & Shifts' => [
+                'icon' => 'ti ti-adjustments-alt',
+                'description' => 'Grace time minutes, late salary deduction %, lead bonus threshold ($200) & days window, and work shifts',
+                'permissions' => [
+                    'hr-settings-manage' => 'Configure Grace Period, Late Deduction %, Lead Bonus Days & Max Leaves',
+                    'hr-shifts-manage' => 'Create, Edit & Assign Work Shifts (Morning / Evening / Night US)',
+                ],
+            ],
         ];
     }
 

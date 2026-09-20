@@ -45,6 +45,14 @@ class LoginController extends Controller
             }
 
             $request->session()->regenerate();
+
+            // Record security audit login log with location and device
+            try {
+                \App\Models\UserLoginLog::recordLogin($user, $request->ip(), $request->userAgent());
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Failed to record login log for User #{$user->id}: " . $e->getMessage());
+            }
+
             return redirect()->intended(route('home'));
         }
 

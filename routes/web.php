@@ -16,6 +16,12 @@ use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\TruckTypeController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\HR\HrEmployeeController;
+use App\Http\Controllers\HR\HrAttendanceController;
+use App\Http\Controllers\HR\HrLeaveController;
+use App\Http\Controllers\HR\HrPayrollController;
+use App\Http\Controllers\HR\HrSettingController;
+use App\Http\Controllers\HR\HrLoanController;
 use Illuminate\Support\Facades\Route;
 
 // Authentication Routes
@@ -126,4 +132,52 @@ Route::middleware(['auth'])->group(function () {
 
     // Excel export
     Route::get('/write-excel', [ExcelController::class, 'writeToExcel'])->name('writeToExcel');
+
+    // HR & Workforce Management
+    Route::prefix('hr')->name('hr.')->group(function () {
+        // Employees
+        Route::get('/employees', [HrEmployeeController::class, 'index'])->name('employees.index');
+        Route::get('/employees/{user}/edit', [HrEmployeeController::class, 'edit'])->name('employees.edit');
+        Route::put('/employees/{user}', [HrEmployeeController::class, 'update'])->name('employees.update');
+
+        // Attendance & Punches
+        Route::get('/attendance', [HrAttendanceController::class, 'index'])->name('attendance.index');
+        Route::get('/login-logs', [HrAttendanceController::class, 'loginLogs'])->name('attendance.loginLogs');
+        Route::post('/attendance/punch', [HrAttendanceController::class, 'webPunch'])->name('attendance.punch');
+        Route::post('/attendance/webhook', [HrAttendanceController::class, 'deviceWebhook'])->name('attendance.webhook');
+        Route::post('/attendance/{id}/regularize', [HrAttendanceController::class, 'regularize'])->name('attendance.regularize');
+
+        // Leaves & Holidays
+        Route::get('/leaves', [HrLeaveController::class, 'index'])->name('leaves.index');
+        Route::post('/leaves/apply', [HrLeaveController::class, 'apply'])->name('leaves.apply');
+        Route::post('/leaves/admin-apply', [HrLeaveController::class, 'adminApplyLeave'])->name('leaves.adminApply');
+        Route::post('/leaves/{id}/approve', [HrLeaveController::class, 'approve'])->name('leaves.approve');
+        Route::post('/leaves/{id}/reject', [HrLeaveController::class, 'reject'])->name('leaves.reject');
+        Route::post('/holidays', [HrLeaveController::class, 'storeHoliday'])->name('holidays.store');
+        Route::delete('/holidays/{id}', [HrLeaveController::class, 'deleteHoliday'])->name('holidays.destroy');
+        Route::post('/roster-exceptions', [HrLeaveController::class, 'storeRosterException'])->name('roster-exceptions.store');
+        Route::delete('/roster-exceptions/{id}', [HrLeaveController::class, 'deleteRosterException'])->name('roster-exceptions.destroy');
+
+        // Payroll & Payslips
+        Route::get('/payroll', [HrPayrollController::class, 'index'])->name('payroll.index');
+        Route::post('/payroll/generate', [HrPayrollController::class, 'generate'])->name('payroll.generate');
+        Route::post('/payroll/{id}/lock', [HrPayrollController::class, 'lockCycle'])->name('payroll.lock');
+        Route::get('/payslip/{id}/normal', [HrPayrollController::class, 'showNormalPayslip'])->name('payslip.normal');
+        Route::get('/payslip/{id}/detailed', [HrPayrollController::class, 'showDetailedPayslip'])->name('payslip.detailed');
+        Route::post('/payslip/{id}/payment', [HrPayrollController::class, 'markPayment'])->name('payslip.payment');
+        Route::get('/payroll/{id}/export-excel', [HrPayrollController::class, 'exportExcel'])->name('payroll.exportExcel');
+
+        // Loans & Salary Advances
+        Route::get('/loans', [HrLoanController::class, 'index'])->name('loans.index');
+        Route::post('/loans', [HrLoanController::class, 'store'])->name('loans.store');
+        Route::post('/loans/{id}/approve', [HrLoanController::class, 'approve'])->name('loans.approve');
+        Route::delete('/loans/{id}', [HrLoanController::class, 'cancel'])->name('loans.cancel');
+
+        // Settings & Shifts
+        Route::get('/settings', [HrSettingController::class, 'index'])->name('settings.index');
+        Route::post('/settings', [HrSettingController::class, 'update'])->name('settings.update');
+        Route::post('/shifts', [HrSettingController::class, 'storeShift'])->name('shifts.store');
+        Route::put('/shifts/{id}', [HrSettingController::class, 'updateShift'])->name('shifts.update');
+        Route::delete('/shifts/{id}', [HrSettingController::class, 'destroyShift'])->name('shifts.destroy');
+    });
 });

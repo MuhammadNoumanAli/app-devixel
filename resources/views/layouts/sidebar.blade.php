@@ -244,6 +244,70 @@
     </li>
     @endcanany
 
+    <!-- HR & Payroll -->
+    @canany(['hr-attendance-list', 'hr-leaves-list', 'hr-payroll-list', 'hr-loans-list', 'hr-employees-list', 'hr-settings-manage'])
+    <li class="menu-item {{ Request::is('hr*') ? 'active open' : '' }}">
+      <a href="javascript:void(0);" class="menu-link menu-toggle">
+        <i class="menu-icon tf-icons ti ti-briefcase"></i>
+        <div>HR & Payroll</div>
+      </a>
+      <ul class="menu-sub">
+        @can('hr-attendance-list')
+        <li class="menu-item {{ Request::is('hr/attendance') ? 'active' : '' }}">
+          <a href="{{ route('hr.attendance.index') }}" class="menu-link">
+            <div>Attendance & Clock-In</div>
+          </a>
+        </li>
+        <li class="menu-item {{ Request::is('hr/login-logs*') ? 'active' : '' }}">
+          <a href="{{ route('hr.attendance.loginLogs') }}" class="menu-link">
+            <div>Login Logs & Locations</div>
+          </a>
+        </li>
+        @endcan
+
+        @can('hr-leaves-list')
+        <li class="menu-item {{ Request::is('hr/leaves*') ? 'active' : '' }}">
+          <a href="{{ route('hr.leaves.index') }}" class="menu-link">
+            <div>Leaves & Holidays</div>
+          </a>
+        </li>
+        @endcan
+
+        @can('hr-payroll-list')
+        <li class="menu-item {{ Request::is('hr/payroll*') || Request::is('hr/payslip*') ? 'active' : '' }}">
+          <a href="{{ route('hr.payroll.index') }}" class="menu-link">
+            <div>Payroll & Payslips</div>
+          </a>
+        </li>
+        @endcan
+
+        @can('hr-loans-list')
+        <li class="menu-item {{ Request::is('hr/loans*') ? 'active' : '' }}">
+          <a href="{{ route('hr.loans.index') }}" class="menu-link">
+            <div>Loans & Advances</div>
+          </a>
+        </li>
+        @endcan
+
+        @can('hr-employees-list')
+        <li class="menu-item {{ Request::is('hr/employees*') ? 'active' : '' }}">
+          <a href="{{ route('hr.employees.index') }}" class="menu-link">
+            <div>Employee Profiles</div>
+          </a>
+        </li>
+        @endcan
+
+        @can('hr-settings-manage')
+        <li class="menu-item {{ Request::is('hr/settings*') ? 'active' : '' }}">
+          <a href="{{ route('hr.settings.index') }}" class="menu-link">
+            <div>HR Settings & Shifts</div>
+          </a>
+        </li>
+        @endcan
+      </ul>
+    </li>
+    @endcanany
+
     <!-- Roles & Permissions -->
     @canany(['list-roles', 'list-permission'])
     <li class="menu-item {{ Request::is('roles*') ? 'active open' : '' }}">

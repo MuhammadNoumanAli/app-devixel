@@ -59,6 +59,51 @@ class User extends Authenticatable
         return $this->hasMany(Message::class, 'to_id');
     }
 
+    public function employeeProfile()
+    {
+        return $this->hasOne(\App\Models\HR\EmployeeProfile::class, 'user_id');
+    }
+
+    public function dailyAttendances()
+    {
+        return $this->hasMany(\App\Models\HR\DailyAttendance::class, 'user_id');
+    }
+
+    public function attendancePunches()
+    {
+        return $this->hasMany(\App\Models\HR\AttendancePunch::class, 'user_id');
+    }
+
+    public function leaves()
+    {
+        return $this->hasMany(\App\Models\HR\Leave::class, 'user_id');
+    }
+
+    public function leaveQuotas()
+    {
+        return $this->hasMany(\App\Models\HR\UserLeaveQuota::class, 'user_id');
+    }
+
+    public function payslips()
+    {
+        return $this->hasMany(\App\Models\HR\Payslip::class, 'user_id');
+    }
+
+    public function loans()
+    {
+        return $this->hasMany(\App\Models\HR\Loan::class, 'user_id');
+    }
+
+    public function loginLogs()
+    {
+        return $this->hasMany(\App\Models\UserLoginLog::class, 'user_id');
+    }
+
+    public function latestLoginLog()
+    {
+        return $this->hasOne(\App\Models\UserLoginLog::class, 'user_id')->latestOfMany('login_at');
+    }
+
     public function getFullNameAttribute()
     {
         if (!empty($this->first_name) || !empty($this->last_name)) {

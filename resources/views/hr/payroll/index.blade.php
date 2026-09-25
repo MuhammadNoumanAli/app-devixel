@@ -173,7 +173,7 @@
                 <span class="badge bg-label-danger font-monospace">
                   -Rs. {{ number_format($ps->total_deductions, 2) }}
                 </span>
-                <div class="fs-8 text-muted">Late: -Rs. {{ number_format($ps->late_deductions_total, 2) }}</div>
+                <div class="fs-8 text-muted mt-2">Late: -Rs. {{ number_format($ps->late_deductions_total, 2) }}</div>
               @else
                 <span class="text-muted">Rs. 0.00</span>
               @endif

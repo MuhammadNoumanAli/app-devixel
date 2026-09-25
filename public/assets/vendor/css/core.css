@@ -1,3 +1,4 @@
+@import url("../../css/custom.css");
 @charset "UTF-8";
 :root {
   --bs-blue: #007bff;
@@ -4130,9 +4131,9 @@ textarea.form-control-lg {
 }
 
 .badge {
-  --bs-badge-padding-x: 1em;
-  --bs-badge-padding-y: 0.49em;
-  --bs-badge-font-size: 0.81em;
+  --bs-badge-padding-x: 1.2em;
+  --bs-badge-padding-y: 0.80em;
+  --bs-badge-font-size: 1em;
   --bs-badge-font-weight: 600;
   --bs-badge-color: #fff;
   --bs-badge-border-radius: 0.25rem;
@@ -6385,7 +6386,7 @@ input:-internal-autofill-selected {
 
 .bg-label-secondary {
   background-color: #f2f2f3 !important;
-  color: #a8aaae !important;
+  color: #3b444b !important;
 }
 
 .bg-label-success {
@@ -6395,7 +6396,7 @@ input:-internal-autofill-selected {
 
 .bg-label-info {
   background-color: #d9f8fc !important;
-  color: #00cfe8 !important;
+  color: #121212 !important;
 }
 
 .bg-label-warning {

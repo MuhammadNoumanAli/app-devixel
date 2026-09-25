@@ -1,0 +1,25 @@
+.waves-effect.waves-light,
+.bg-label-success,
+.bg-label-danger {
+    transition: all 300ms ease;
+}
+.waves-effect.waves-light:hover {
+    transform: translateY(-2px);
+        background: linear-gradient(72.47deg, #7367f0 22.16%, rgba(115, 103, 240, 0.7) 76.47%);
+    box-shadow: 0px 2px 6px 0px rgba(115, 103, 240, 0.48);
+    color: #fff !important;
+}
+
+.user-email__text {
+    font-size: 1rem !important;
+}
+
+.bg-label-success:hover {
+    background-color: #28c76f !important;
+    color: #dff7e9 !important;
+}
+
+.bg-label-danger:hover {
+    background-color: #ea5455 !important;
+    color: #fce5e6 !important;
+}

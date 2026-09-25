@@ -52,7 +52,7 @@
                 </div>
               </div>
             </td>
-            <td>{{ $user->email }}</td>
+            <td class="user-email__text">{{ $user->email }}</td>
             <td class="text-center">
               <span class="badge bg-label-secondary font-monospace">
                 {{ $user->load_commission ? $user->load_commission . '%' : '0%' }}
